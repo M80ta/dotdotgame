@@ -3,6 +3,7 @@
 import {BoardView} from './board/board-view.js';
 import {GameController} from './game/controller.js';
 import {HighScoreStore} from './services/high-score.js';
+import {GameSessionStore} from './services/game-session.js';
 import {BallAnimator} from './ui/ball-animator.js';
 import {GameUI} from './ui/game-ui.js';
 
@@ -11,6 +12,7 @@ const boardView = new BoardView(document.getElementById('gameBoard'), document);
 const controller = new GameController({
     ui, boardView,
     animator: new BallAnimator(boardView, window),
-    store: new HighScoreStore(() => window.localStorage)
+    store: new HighScoreStore(() => window.localStorage),
+    sessionStore: new GameSessionStore(() => window.localStorage)
 });
-controller.restart();
+controller.start();

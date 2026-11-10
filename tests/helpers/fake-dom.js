@@ -5,10 +5,20 @@ import {GameController} from '../../src/game/controller.js';
 import {BallAnimator} from '../../src/ui/ball-animator.js';
 import {GameUI} from '../../src/ui/game-ui.js';
 import {HighScoreStore} from '../../src/services/high-score.js';
+import {GameSessionStore} from '../../src/services/game-session.js';
 
 export const html = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
 
-export function createApp({size = 8, batch = 3, reducedMotion = true, deferAnimation = false, deferWait = false} = {}) {
+export function createMemoryStorage(initial = {}) {
+    const values = new Map(Object.entries(initial));
+    return {
+        getItem: key => values.get(key) ?? null,
+        setItem: (key, value) => values.set(key, String(value)),
+        removeItem: key => values.delete(key)
+    };
+}
+
+export function createApp({size = 8, batch = 3, reducedMotion = true, deferAnimation = false, deferWait = false, storage = createMemoryStorage()} = {}) {
     const animations = [];
     const waits = [];
     const errors = [];
@@ -91,13 +101,14 @@ export function createApp({size = 8, batch = 3, reducedMotion = true, deferAnima
     const animator = new BallAnimator(view, window);
     const controller = new GameController({
         ui, boardView: view, animator,
-        store: new HighScoreStore(() => ({getItem: () => null, setItem() {}})),
+        store: new HighScoreStore(() => storage),
+        sessionStore: new GameSessionStore(() => storage),
         random: () => randomValues.length ? randomValues.shift() : 0.37,
         onError: error => errors.push(error)
     });
-    controller.restart();
+    controller.start();
     return {
-        controller, ui, view, animator, document, elements, animations, waits, errors,
+        controller, ui, view, animator, document, elements, animations, waits, errors, storage,
         setRandom: values => { randomValues = values.slice(); },
         click: (r, c) => view.getCell(r, c).listeners.click(),
         emptyBoard() {

@@ -33,7 +33,7 @@ test('input goes through board view and controller without spawning on an empty 
     await app.click(0, 1);
     assert.equal(app.controller.game.board.cells[0][1], 4);
     assert.equal(countBalls(app), 4);
-    assert.equal(app.elements.queueSizeSelect.disabled, false);
+    assert.equal(app.elements.gameBoard.attributes['aria-busy'], 'false');
     assert.deepEqual(app.errors, []);
 });
 
@@ -52,15 +52,24 @@ test('keyboard selection and arrow navigation retain focus after rendering', () 
     assert.equal(prevented, 2);
 });
 
-test('resizing the batch and board updates the matching UI without stale state', () => {
+test('changing either setting starts a fresh game with zero score and the selected n balls', () => {
     const app = createApp();
-    const cells = structuredClone(app.controller.game.board.cells);
+    const oldGame = app.controller.game;
+    oldGame.score = 25;
+    app.controller.combo = 2;
     app.elements.queueSizeSelect.value = '5';
     app.elements.queueSizeSelect.listeners.change();
     assert.equal(app.elements.ballQueuePreview.children.length, 5);
-    assert.deepEqual(app.controller.game.board.cells, cells);
+    assert.notEqual(app.controller.game, oldGame);
+    assert.equal(countBalls(app), 5);
+    assert.equal(app.controller.game.score, 0);
+    assert.equal(app.controller.game.selectedBall, null);
+    assert.equal(app.elements.comboBadge.style.display, 'none');
+    const previousGame = app.controller.game;
+    previousGame.score = 12;
     app.elements.boardSizeSelect.value = '10';
     app.elements.boardSizeSelect.listeners.change();
+    assert.notEqual(app.controller.game, previousGame);
     assert.equal(app.elements.gameBoard.children.length, 100);
     assert.equal(countBalls(app), 5);
     assert.equal(app.elements.currentScore.textContent, '0');
@@ -95,7 +104,7 @@ test('rapid clicks are ignored and an old animation cannot change or unlock a ne
     const before = structuredClone(app.controller.game.board.cells);
     await app.click(0, 2);
     assert.deepEqual(app.controller.game.board.cells, before);
-    assert.equal(app.elements.queueSizeSelect.disabled, true);
+    assert.equal(app.elements.gameBoard.attributes['aria-busy'], 'true');
     app.elements.restartBtn.listeners.click();
     assert.equal(countBalls(app), 3);
     const source = app.controller.game.board.cells.flatMap((row, r) => row.flatMap((color, c) => color === null ? [] : [{r, c}]))[0];

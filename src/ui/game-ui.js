@@ -9,7 +9,7 @@ export class GameUI {
         const ids = ['boardSizeSelect', 'queueSizeSelect', 'restartBtn', 'modalRestartBtn', 'gameOverModal',
             'modalTitle', 'modalMessage', 'ballQueuePreview', 'moveHint', 'comboBadge', 'currentScore',
             'currentScoreDisplay', 'highScoreDisplay', 'playerTowerFill', 'kingTowerFill', 'playerAvatar',
-            'kingAvatar', 'kingStatusText'];
+            'kingAvatar', 'kingStatusText', 'gameBoard'];
         this.refs = Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));
     }
 
@@ -17,15 +17,21 @@ export class GameUI {
         return {boardSize: Number(this.refs.boardSizeSelect.value), batchSize: Number(this.refs.queueSizeSelect.value)};
     }
 
-    bind({restart, changeBatchSize}) {
+    setSettings({boardSize, batchSize}) {
+        this.refs.boardSizeSelect.value = String(boardSize);
+        this.refs.queueSizeSelect.value = String(batchSize);
+    }
+
+    bind({restart}) {
         this.refs.restartBtn.addEventListener('click', restart);
         this.refs.modalRestartBtn.addEventListener('click', restart);
         this.refs.boardSizeSelect.addEventListener('change', restart);
-        this.refs.queueSizeSelect.addEventListener('change', () => changeBatchSize(Number(this.refs.queueSizeSelect.value)));
+        this.refs.queueSizeSelect.addEventListener('change', restart);
     }
 
     setProcessing(processing) {
-        this.refs.queueSizeSelect.disabled = processing;
+        // Settings remain usable: choosing either setting starts a new game.
+        this.refs.gameBoard.setAttribute('aria-busy', String(processing));
     }
 
     setHint(message) {

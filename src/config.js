@@ -7,5 +7,7 @@ export const DEFAULT_BATCH_SIZE = 3;
 export const WIN_COUNT = 5;
 export const DEFAULT_HIGH_SCORE = 100;
 export const HIGH_SCORE_KEY = 'dot_crown_highscore';
+export const GAME_SESSION_KEY = 'nini_doudou_game_a_session';
+export const GAME_SESSION_VERSION = 1;
 export const MOVE_DIRECTIONS = Object.freeze([[-1, 0], [0, 1], [1, 0], [0, -1]]);
 export const LINE_DIRECTIONS = Object.freeze([[0, 1], [1, 0], [1, 1], [1, -1]]);

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import {BATCH_SIZES, BOARD_SIZES, DEFAULT_BATCH_SIZE, DEFAULT_BOARD_SIZE} from '../config.js';
 import {Board} from '../board/board.js';
-import {createColorBatch} from '../elements/ball.js';
+import {COLORS, createColorBatch} from '../elements/ball.js';
 import {findCompletedLines} from './lines.js';
 
 /** Game A state and turn rules, independent from rendering and animation. */
@@ -18,9 +18,45 @@ export class GameA {
         this.preview = createColorBatch(this.batchSize, [], random);
     }
 
-    setBatchSize(count) {
-        this.batchSize = BATCH_SIZES.includes(count) ? count : DEFAULT_BATCH_SIZE;
-        this.preview = createColorBatch(this.batchSize, this.preview, this.random);
+    /** Only complete turns are serialized; animation state is never persisted. */
+    toSnapshot() {
+        return {
+            boardSize: this.board.size,
+            batchSize: this.batchSize,
+            cells: this.board.cells.map(row => [...row]),
+            preview: [...this.preview],
+            score: this.score,
+            selectedBall: this.selectedBall ? {...this.selectedBall} : null
+        };
+    }
+
+    /** Restore without generating initial balls or consuming any randomness. */
+    static fromSnapshot(snapshot, {random = Math.random} = {}) {
+        if (!snapshot || !BOARD_SIZES.includes(snapshot.boardSize) || !BATCH_SIZES.includes(snapshot.batchSize)) return null;
+        const {boardSize, batchSize, cells, preview, score, selectedBall} = snapshot;
+        const validColor = color => Number.isInteger(color) && color >= 0 && color < COLORS.length;
+        if (!Array.isArray(cells) || cells.length !== boardSize
+            || !cells.every(row => Array.isArray(row) && row.length === boardSize
+                && row.every(color => color === null || validColor(color)))
+            || !Array.isArray(preview) || preview.length !== batchSize
+            || !preview.every(validColor) || new Set(preview).size !== batchSize
+            || !Number.isSafeInteger(score) || score < 0) return null;
+
+        const board = new Board(boardSize);
+        board.cells = cells.map(row => [...row]);
+        if (board.isFull || findCompletedLines(board).lineCount > 0) return null;
+        if (selectedBall !== null && (!selectedBall || !board.contains(selectedBall.r, selectedBall.c)
+            || board.cells[selectedBall.r][selectedBall.c] === null)) return null;
+
+        const game = Object.create(GameA.prototype);
+        Object.assign(game, {
+            random, board, batchSize, score,
+            preview: [...preview],
+            selectedBall: selectedBall ? {r: selectedBall.r, c: selectedBall.c} : null,
+            isOver: false,
+            initialBalls: new Set()
+        });
+        return game;
     }
 
     selectCell(r, c) {

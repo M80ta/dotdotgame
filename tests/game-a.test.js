@@ -189,15 +189,3 @@ test('clearing the last vacant cell is processed before deciding game-over', () 
     assert.equal(countBalls(game), 59);
     assert.equal(game.isOver, false);
 });
-
-test('batch resizing preserves board, score, selection and preview prefix', () => {
-    const game = new GameA();
-    const before = snapshot(game);
-    for (const count of [5, 4, 3]) {
-        game.setBatchSize(count);
-        assert.equal(game.preview.length, count);
-        assert.deepEqual(game.preview.slice(0, 3), before.preview);
-        assert.deepEqual(game.board.cells, before.cells);
-        assert.equal(game.score, before.score);
-    }
-});
