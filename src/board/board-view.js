@@ -4,9 +4,10 @@ import {COLORS, createBallElement} from '../elements/ball.js';
 
 /** Only draws cells and forwards input; it does not decide whether a move is legal. */
 export class BoardView {
-    constructor(root, document) {
+    constructor(root, document, i18n) {
         this.root = root;
         this.document = document;
+        this.i18n = i18n;
         this.onCellClick = () => {};
     }
 
@@ -24,10 +25,11 @@ export class BoardView {
                 cell.className = 'cell';
                 cell.dataset.row = r;
                 cell.dataset.col = c;
+                cell.dataset.color = color === null ? '' : String(color);
                 cell.tabIndex = 0;
                 cell.setAttribute('role', 'button');
                 cell.setAttribute('aria-pressed', String(selected));
-                cell.setAttribute('aria-label', `第 ${r + 1} 列第 ${c + 1} 格，${color === null ? '空格' : COLORS[color] + '球'}`);
+                this.setCellLabel(cell, r, c, color);
                 cell.classList.toggle('selected', selected);
                 if (color === null) cell.classList.add('active-hover');
                 else cell.appendChild(createBallElement(this.document, color, {isNew: newCells.has(`${r},${c}`)}));
@@ -53,6 +55,22 @@ export class BoardView {
 
     getCell(r, c) {
         return this.root.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+    }
+
+    setCellLabel(cell, r, c, color) {
+        const contents = color === null ? this.i18n.t('board.empty')
+            : this.i18n.t('board.ball', {color: this.i18n.t(`color.${COLORS[color]}`)});
+        cell.setAttribute('aria-label', this.i18n.t('board.cell', {row: r + 1, col: c + 1, contents}));
+    }
+
+    localize() {
+        // Update the displayed cells in place, including during a move animation.
+        // The model may already contain the committed result of the next frame.
+        for (const cell of this.root.children) {
+            if (cell.dataset.row === undefined) continue;
+            this.setCellLabel(cell, Number(cell.dataset.row), Number(cell.dataset.col),
+                cell.dataset.color === '' ? null : Number(cell.dataset.color));
+        }
     }
 
     markClearing(cells) {

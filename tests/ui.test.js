@@ -17,7 +17,7 @@ test('UI renders every size/batch and keeps Game B unavailable', () => {
             assert.deepEqual(app.errors, []);
         }
     }
-    assert.match(html, /<option value="B" disabled>/);
+    assert.match(html, /<option value="B" disabled[^>]*>/);
     assert.match(html, /viewport-fit=cover/);
 });
 

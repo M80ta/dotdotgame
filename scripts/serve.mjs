@@ -16,7 +16,7 @@ export function createStaticServer(root = projectRoot) {
         try {
             const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
             const entry = pathname === '/' ? 'index.html' : pathname.slice(1);
-            const allowed = ['index.html', 'dot_and_crown_fixed.html', 'LICENSE.md', 'README.md', '.nojekyll'].includes(entry)
+            const allowed = ['index.html', 'dot_and_crown_fixed.html', 'LICENSE.md', 'README.md', 'README.zh-TW.md', '.nojekyll'].includes(entry)
                 || entry.startsWith('src/') || entry.startsWith('styles/') || entry.startsWith('assets/');
             const target = path.resolve(resolvedRoot, entry);
             const relative = path.relative(resolvedRoot, target);

@@ -4,13 +4,29 @@ import {COLORS, createBallElement} from '../elements/ball.js';
 
 /** Settings, preview, score panels, towers, announcements, and modal. */
 export class GameUI {
-    constructor(document) {
+    constructor(document, i18n) {
         this.document = document;
+        this.i18n = i18n;
         const ids = ['boardSizeSelect', 'queueSizeSelect', 'restartBtn', 'modalRestartBtn', 'gameOverModal',
             'modalTitle', 'modalMessage', 'ballQueuePreview', 'moveHint', 'comboBadge', 'currentScore',
             'currentScoreDisplay', 'highScoreDisplay', 'playerTowerFill', 'kingTowerFill', 'playerAvatar',
-            'kingAvatar', 'kingStatusText', 'gameBoard'];
+            'kingAvatar', 'kingStatusText', 'gameBoard', 'languageSelect'];
         this.refs = Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));
+        this.localize();
+    }
+
+    localize() {
+        this.i18n.apply(this.document);
+        this.refs.languageSelect.value = this.i18n.language;
+        if (this.preview) this.renderPreview(this.preview);
+        if (this.scoreState) this.renderScores(...this.scoreState);
+        else this.refs.kingStatusText.textContent = this.i18n.t('player.challenge');
+        if (this.comboCount !== undefined) this.setCombo(this.comboCount);
+        if (this.modalState) this.showGameOver(...this.modalState, false);
+        else {
+            this.refs.modalTitle.textContent = this.i18n.t('modal.gameOver');
+            this.refs.modalMessage.textContent = this.i18n.t('modal.full', {score: 0});
+        }
     }
 
     get settings() {
@@ -22,11 +38,12 @@ export class GameUI {
         this.refs.queueSizeSelect.value = String(batchSize);
     }
 
-    bind({restart}) {
+    bind({restart, changeLanguage}) {
         this.refs.restartBtn.addEventListener('click', restart);
         this.refs.modalRestartBtn.addEventListener('click', restart);
         this.refs.boardSizeSelect.addEventListener('change', restart);
         this.refs.queueSizeSelect.addEventListener('change', restart);
+        this.refs.languageSelect.addEventListener('change', () => changeLanguage(this.refs.languageSelect.value));
     }
 
     setProcessing(processing) {
@@ -39,12 +56,13 @@ export class GameUI {
     }
 
     renderPreview(colors) {
+        this.preview = [...colors];
         this.refs.queueSizeSelect.value = String(colors.length);
         this.refs.ballQueuePreview.innerHTML = '';
         colors.forEach((color, index) => {
             const item = this.document.createElement('li');
             item.className = 'ball-queue-item';
-            item.setAttribute('aria-label', `第 ${index + 1} 個：${COLORS[color]}`);
+            item.setAttribute('aria-label', this.i18n.t('preview.item', {index: index + 1, color: this.i18n.t(`color.${COLORS[color]}`)}));
             const position = this.document.createElement('span');
             position.className = 'queue-position';
             position.textContent = String(index + 1);
@@ -56,11 +74,13 @@ export class GameUI {
     }
 
     setCombo(count) {
-        this.refs.comboBadge.textContent = `COMBO x${count}!`;
+        this.comboCount = count;
+        this.refs.comboBadge.textContent = this.i18n.t('score.combo', {count});
         this.refs.comboBadge.style.display = count > 1 ? 'block' : 'none';
     }
 
     renderScores(score, highScore, startingHighScore) {
+        this.scoreState = [score, highScore, startingHighScore];
         const refs = this.refs;
         refs.currentScore.textContent = String(score);
         refs.currentScoreDisplay.textContent = String(score);
@@ -71,25 +91,26 @@ export class GameUI {
         const newRecord = score > startingHighScore;
         refs.playerAvatar.textContent = newRecord ? '👑' : '🧘';
         refs.kingAvatar.textContent = newRecord ? '🤴' : '👑';
-        refs.kingStatusText.textContent = newRecord ? '🔥 你已登上國王寶座！' : '超越國王即登基！';
+        refs.kingStatusText.textContent = this.i18n.t(newRecord ? 'player.record' : 'player.challenge');
         refs.kingStatusText.classList.toggle('new-record', newRecord);
     }
 
     hideGameOver() {
+        this.modalState = null;
         this.refs.gameOverModal.classList.remove('show');
         this.refs.gameOverModal.setAttribute('aria-hidden', 'true');
         this.refs.gameOverModal.inert = true;
         if (this.document.activeElement === this.refs.modalRestartBtn) this.refs.restartBtn.focus({preventScroll: true});
     }
 
-    showGameOver(score, startingHighScore) {
+    showGameOver(score, startingHighScore, focus = true) {
+        this.modalState = [score, startingHighScore];
         const newRecord = score > startingHighScore;
-        this.refs.modalTitle.textContent = newRecord ? '🏆 恭迎新國王！' : '遊戲結束';
-        this.refs.modalMessage.textContent = newRecord
-            ? `太神啦！你以 ${score} 分刷新了最高紀錄！` : `棋盤已滿！最終得分：${score} 分`;
+        this.refs.modalTitle.textContent = this.i18n.t(newRecord ? 'modal.newKing' : 'modal.gameOver');
+        this.refs.modalMessage.textContent = this.i18n.t(newRecord ? 'modal.record' : 'modal.full', {score});
         this.refs.gameOverModal.inert = false;
         this.refs.gameOverModal.setAttribute('aria-hidden', 'false');
         this.refs.gameOverModal.classList.add('show');
-        this.refs.modalRestartBtn.focus({preventScroll: true});
+        if (focus) this.refs.modalRestartBtn.focus({preventScroll: true});
     }
 }

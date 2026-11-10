@@ -11,10 +11,10 @@ Commercial use outside the permitted purposes requires separate permission.
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#1a1a2e">
-    <meta name="description" content="妮妮的豆豆大戰：選球移動、五連線消除，支援手機、平板與電腦的策略小遊戲。">
-    <meta name="apple-mobile-web-app-title" content="妮妮的豆豆大戰">
-    <meta property="og:title" content="妮妮的豆豆大戰">
-    <meta property="og:description" content="和可愛豆豆一起挑戰五連線！手機、平板與電腦都能玩。">
+    <meta name="description" data-i18n-content="app.description" content="妮妮的豆豆大戰：選球移動、五連線消除，支援手機、平板與電腦的策略小遊戲。">
+    <meta name="apple-mobile-web-app-title" data-i18n-content="app.title" content="妮妮的豆豆大戰">
+    <meta property="og:title" data-i18n-content="app.title" content="妮妮的豆豆大戰">
+    <meta property="og:description" data-i18n-content="app.socialDescription" content="和可愛豆豆一起挑戰五連線！手機、平板與電腦都能玩。">
     <meta property="og:image" content="https://m80ta.github.io/dotdotgame/assets/doudou-icon-512.png">
     <meta property="og:image:width" content="512">
     <meta property="og:image:height" content="512">
@@ -31,66 +31,75 @@ Commercial use outside the permitted purposes requires separate permission.
     <script type="module" src="./src/main.js"></script>
 </head>
 <body>
-    <div class="game-switcher">
-        <label for="gameModeSelect">遊戲切換：</label>
-        <select id="gameModeSelect">
-            <option value="A" selected>遊戲 A</option>
-            <option value="B" disabled>遊戲 B（尚未開放）</option>
-        </select>
+    <div class="top-controls">
+        <div class="game-switcher">
+            <label for="languageSelect" data-i18n="language.label">語言 / Language：</label>
+            <select id="languageSelect" autocomplete="off">
+                <option value="zh-TW" lang="zh-TW">繁體中文</option>
+                <option value="en" lang="en">English</option>
+            </select>
+        </div>
+        <div class="game-switcher">
+            <label for="gameModeSelect" data-i18n="mode.label">遊戲切換：</label>
+            <select id="gameModeSelect">
+                <option value="A" selected data-i18n="mode.a">遊戲 A</option>
+                <option value="B" disabled data-i18n="mode.b">遊戲 B（尚未開放）</option>
+            </select>
+        </div>
     </div>
     <header>
         <div class="brand-heading">
             <img class="brand-icon" src="./assets/doudou-icon-180.png" width="56" height="56" alt="">
-            <h1>妮妮的豆豆大戰</h1>
+            <h1 id="gameTitle" data-i18n="app.title">妮妮的豆豆大戰</h1>
         </div>
-        <p class="subtitle">策略連線消除・挑戰國王寶座</p>
+        <p class="subtitle" data-i18n="app.subtitle">策略連線消除・挑戰國王寶座</p>
     </header>
     <main class="game-container">
-        <aside class="sidebar king-sidebar" aria-label="歷史國王">
+        <aside class="sidebar king-sidebar" aria-label="歷史國王" data-i18n-aria-label="king.label">
             <div>
-                <h3>👑 歷史國王</h3>
+                <h3 data-i18n="king.title">👑 歷史國王</h3>
                 <div class="score-display" id="highScoreDisplay">0</div>
             </div>
             <div class="tower-container">
                 <div class="tower-fill king-tower-fill" id="kingTowerFill"></div>
                 <div class="character-avatar" id="kingAvatar" aria-hidden="true">🤴</div>
             </div>
-            <p class="sidebar-caption">王座高度隨紀錄成長</p>
+            <p class="sidebar-caption" data-i18n="king.caption">王座高度隨紀錄成長</p>
         </aside>
-        <section class="main-board-area" aria-label="遊戲 A">
+        <section class="main-board-area" aria-label="遊戲 A" data-i18n-aria-label="mode.a">
             <div class="settings-bar">
-                <label for="boardSizeSelect">⚙️ 棋盤尺寸設定：</label>
+                <label for="boardSizeSelect" data-i18n="settings.board">⚙️ 棋盤尺寸設定：</label>
                 <select id="boardSizeSelect" autocomplete="off">
-                    <option value="8">8 × 8 (經典)</option>
-                    <option value="9">9 × 9 (進階)</option>
-                    <option value="10">10 × 10 (挑戰)</option>
+                    <option value="8" data-i18n="settings.size8">8 × 8 (經典)</option>
+                    <option value="9" data-i18n="settings.size9">9 × 9 (進階)</option>
+                    <option value="10" data-i18n="settings.size10">10 × 10 (挑戰)</option>
                 </select>
             </div>
             <div class="settings-bar">
-                <label for="queueSizeSelect">每回合新增球數 n：</label>
+                <label for="queueSizeSelect" data-i18n="settings.batch">每回合新增球數 n：</label>
                 <select id="queueSizeSelect" autocomplete="off">
-                    <option value="3" selected>3 個（預設）</option>
-                    <option value="4">4 個</option>
-                    <option value="5">5 個</option>
+                    <option value="3" selected data-i18n="settings.batch3">3 個（預設）</option>
+                    <option value="4" data-i18n="settings.batch4">4 個</option>
+                    <option value="5" data-i18n="settings.batch5">5 個</option>
                 </select>
             </div>
             <div class="status-panel">
                 <div class="next-ball-preview">
-                    <span id="queueLabel">下回合新增：</span>
+                    <span id="queueLabel" data-i18n="preview.label">下回合新增：</span>
                     <ol class="ball-queue" id="ballQueuePreview" aria-labelledby="queueLabel"></ol>
                     <span class="queue-hint" id="moveHint" role="status" aria-live="polite">先選擇一顆球，再點擊可到達的空格</span>
                 </div>
                 <div class="combo-badge" id="comboBadge">COMBO x1</div>
-                <div class="score-summary">得分：<strong id="currentScore">0</strong></div>
+                <div class="score-summary"><span data-i18n="score.label">得分：</span><strong id="currentScore">0</strong></div>
             </div>
-            <div class="board" id="gameBoard" role="group" aria-label="遊戲 A 棋盤" aria-describedby="moveHint"></div>
+            <div class="board" id="gameBoard" role="group" aria-label="遊戲 A 棋盤" data-i18n-aria-label="board.label" aria-describedby="moveHint"></div>
             <div class="controls">
-                <button type="button" class="btn" id="restartBtn">重新開始遊戲</button>
+                <button type="button" class="btn" id="restartBtn" data-i18n="button.restart">重新開始遊戲</button>
             </div>
         </section>
-        <aside class="sidebar player-sidebar" aria-label="當前挑戰者">
+        <aside class="sidebar player-sidebar" aria-label="當前挑戰者" data-i18n-aria-label="player.label">
             <div>
-                <h3>🪑 當前挑戰者</h3>
+                <h3 data-i18n="player.title">🪑 當前挑戰者</h3>
                 <div class="score-display" id="currentScoreDisplay">0</div>
             </div>
             <div class="tower-container">
@@ -104,9 +113,9 @@ Commercial use outside the permitted purposes requires separate permission.
         <div class="modal">
             <h2 id="modalTitle">遊戲結束</h2>
             <p id="modalMessage">棋盤已滿，無可落子位置！</p>
-            <button type="button" class="btn" id="modalRestartBtn">再玩一次</button>
+            <button type="button" class="btn" id="modalRestartBtn" data-i18n="button.playAgain">再玩一次</button>
         </div>
     </div>
-    <noscript><p class="noscript-message">請啟用 JavaScript 後遊玩此遊戲。</p></noscript>
+    <noscript><p class="noscript-message">請啟用 JavaScript 後遊玩此遊戲。Enable JavaScript to play.</p></noscript>
 </body>
 </html>

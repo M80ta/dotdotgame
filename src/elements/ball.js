@@ -1,6 +1,6 @@
 // Required Notice: Copyright (c) 2026 M80ta
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-export const COLORS = Object.freeze(['紅色', '藍色', '綠色', '黃色', '紫色']);
+export const COLORS = Object.freeze(['red', 'blue', 'green', 'yellow', 'purple']);
 
 /** A batch has distinct colors; resizing preserves its existing prefix. */
 export function createColorBatch(count, existing = [], random = Math.random) {

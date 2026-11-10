@@ -1,6 +1,7 @@
 // Required Notice: Copyright (c) 2026 M80ta
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import {GAME_SESSION_KEY, GAME_SESSION_VERSION} from '../config.js';
+import {isValidStatus} from '../game/status.js';
 
 /** A single device/browser-local Game A save, separate from the high score. */
 export class GameSessionStore {
@@ -24,10 +25,11 @@ export class GameSessionStore {
         return null;
     }
 
-    save({game, startingHighScore, combo, message}) {
+    save({game, startingHighScore, combo, message, status}) {
         try {
             this.getStorage().setItem(GAME_SESSION_KEY, JSON.stringify({
-                version: GAME_SESSION_VERSION, mode: 'A', game, startingHighScore, combo, message
+                version: GAME_SESSION_VERSION, mode: 'A', game, startingHighScore, combo, message,
+                ...(isValidStatus(status) ? {status} : {})
             }));
             return true;
         } catch {

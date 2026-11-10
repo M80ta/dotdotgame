@@ -6,6 +6,7 @@ import {BallAnimator} from '../../src/ui/ball-animator.js';
 import {GameUI} from '../../src/ui/game-ui.js';
 import {HighScoreStore} from '../../src/services/high-score.js';
 import {GameSessionStore} from '../../src/services/game-session.js';
+import {I18n} from '../../src/i18n/translator.js';
 
 export const html = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
 
@@ -18,7 +19,7 @@ export function createMemoryStorage(initial = {}) {
     };
 }
 
-export function createApp({size = 8, batch = 3, reducedMotion = true, deferAnimation = false, deferWait = false, storage = createMemoryStorage()} = {}) {
+export function createApp({size = 8, batch = 3, reducedMotion = true, deferAnimation = false, deferWait = false, storage = createMemoryStorage(), language = 'zh-TW'} = {}) {
     const animations = [];
     const waits = [];
     const errors = [];
@@ -62,6 +63,7 @@ export function createApp({size = 8, batch = 3, reducedMotion = true, deferAnima
         contains(element) { return Boolean(element) && (this === element || this.children.some(child => child.contains(element))); }
         focus() { document.activeElement = this; }
         setAttribute(name, value) { this.attributes[name] = value; }
+        getAttribute(name) { return this.attributes[name] ?? null; }
         addEventListener(name, listener) { this.listeners[name] = listener; }
         querySelector(selector) {
             if (selector === '.ball') return this.children.find(child => child.classList.contains('ball'));
@@ -86,14 +88,26 @@ export function createApp({size = 8, batch = 3, reducedMotion = true, deferAnima
         }
     }
     const elements = Object.fromEntries([...html.matchAll(/\bid="([^"]+)"/g)].map(([, id]) => [id, new Element()]));
+    const translatedElements = [...html.matchAll(/<[a-z][a-z0-9-]*\b([^>]*\bdata-i18n(?:-[a-z-]+)?="[^"]+"[^>]*)>/g)].map(([, attributes]) => {
+        const values = Object.fromEntries([...attributes.matchAll(/([\w-]+)="([^"]*)"/g)].map(([, name, value]) => [name, value]));
+        const element = elements[values.id] ?? new Element();
+        for (const [name, value] of Object.entries(values)) element.setAttribute(name, value);
+        return element;
+    });
+    document.documentElement = new Element();
+    document.querySelectorAll = selector => {
+        const attribute = selector.slice(1, -1);
+        return translatedElements.filter(element => element.getAttribute(attribute) !== null);
+    };
     elements.boardSizeSelect.value = String(size);
     elements.queueSizeSelect.value = String(batch);
     new Element().appendChild(elements.playerTowerFill);
     new Element().appendChild(elements.kingTowerFill);
     document.getElementById = id => elements[id];
     document.createElement = () => new Element();
-    const ui = new GameUI(document);
-    const view = new BoardView(elements.gameBoard, document);
+    const i18n = new I18n({getStorage: () => storage, language});
+    const ui = new GameUI(document, i18n);
+    const view = new BoardView(elements.gameBoard, document, i18n);
     const window = {
         matchMedia: () => ({matches: reducedMotion}),
         setTimeout: callback => deferWait ? waits.push(callback) : queueMicrotask(callback)
@@ -108,7 +122,7 @@ export function createApp({size = 8, batch = 3, reducedMotion = true, deferAnima
     });
     controller.start();
     return {
-        controller, ui, view, animator, document, elements, animations, waits, errors, storage,
+        controller, ui, view, animator, document, elements, animations, waits, errors, storage, i18n,
         setRandom: values => { randomValues = values.slice(); },
         click: (r, c) => view.getCell(r, c).listeners.click(),
         emptyBoard() {

@@ -1,147 +1,167 @@
-# 妮妮的豆豆大戰
+# Nini's Bean Battle
 
-<img src="./assets/doudou-icon-180.png" alt="妮妮的豆豆大戰：綠、紅、藍三顆微笑豆豆" width="96" height="96">
+**English** | [繁體中文](./README.zh-TW.md)
 
-以原生 JavaScript ES Modules、HTML、CSS 製作的五連線策略遊戲。UI、棋盤資料、球元素、遊戲規則與動畫分開管理，沒有執行期套件或後端服務。
+<img src="./assets/doudou-icon-180.png" alt="Nini's Bean Battle: three cheerful green, red, and blue beans" width="96" height="96">
 
-- 線上入口：<https://m80ta.github.io/dotdotgame/>
-- 原始碼：<https://github.com/M80ta/dotdotgame>
-- 目前提供「遊戲 A」，右上角保留「遊戲 B」選項，尚未開放。
+A five-in-a-row strategy game built with native JavaScript ES Modules, HTML, and CSS. Move colorful beans around obstacles, complete matching lines, and challenge the reigning king. The UI, board data, bean elements, game rules, animation, and storage are separate modules. No runtime packages or backend are required.
 
-## 本機啟動
+- **Play:** <https://m80ta.github.io/dotdotgame/>
+- **Short link:** <https://is.gd/QpkZPm>
+- **Source:** <https://github.com/M80ta/dotdotgame>
+- **Modes:** Game A is playable. Game B is reserved in the menu and is not available yet.
 
-需要 Node.js 20 以上；GitHub Actions 使用 Node.js 24。沒有外部套件，不必執行 `npm install`。
+## Languages
+
+Use **Language / 語言** at the top right to switch between **English** and **繁體中文**. Menus, instructions, scores, game-over dialogs, preview descriptions, and board accessibility labels are translated.
+
+On the first visit, Chinese browser locales use Traditional Chinese; other browser locales use English. A saved language choice takes precedence on subsequent visits. Switching languages preserves the board, score, settings, selection, preview, and active animation. Language preferences are stored separately from game progress, so restarting or losing does not reset the language. Existing saves with Chinese-only status messages remain compatible.
+
+GitHub uses this English `README.md` as the main project description. [README.zh-TW.md](./README.zh-TW.md) contains the complete Traditional Chinese version.
+
+## Run locally
+
+Use Node.js 20 or later. GitHub Actions uses Node.js 24. There are no external dependencies, so `npm install` is unnecessary.
 
 ```powershell
 npm start
 ```
 
-開啟 <http://127.0.0.1:4173>。也可用 Python 啟動：
+Open <http://127.0.0.1:4173>. You can also use Python:
 
 ```powershell
 python -m http.server 4173 --bind 127.0.0.1
 ```
 
-請透過 HTTP 開啟 `index.html`。ES Modules 需要正確的來源與 JavaScript MIME，直接雙擊 HTML 的 `file://` 開啟方式不適用。舊入口 `dot_and_crown_fixed.html` 會轉到 `index.html`。
+Serve `index.html` over HTTP. ES Modules need a valid origin and JavaScript MIME type; opening the HTML directly with `file://` is not supported. The previous entry, `dot_and_crown_fixed.html`, redirects to `index.html`.
 
-## 遊戲 A 規則
+## Game A rules
 
-1. 棋盤可選擇 8 × 8、9 × 9、10 × 10。
-2. n 預設 3，可改為 4 或 5。開局在不重複的隨機位置產生 n 顆球。同一批球的顏色互不相同，從紅、藍、綠、黃、紫五色抽取。
-3. 點擊／輕觸既有的球即可選取，選取球會輕微跳動；再次點同一顆球會取消，點另一顆會切換選取。
-4. 選取後點擊空格，棋盤以 BFS 搜尋上下左右的最短路徑。不能斜向移動，也不能穿過其他球。沒有路徑時保留選取，不新增球、不消耗預覽。
-5. 成功移動後，**每回合都會**將上方預覽的 n 顆球放到隨機空格，並產生新的預覽。即使移動已形成連線，仍先補球再統一判定消除。
-6. 橫向、直向、左上至右下、右上至左下，任一方向連續同色球達 5 顆以上，即整條消除。六顆以上的連續球算一條線，不拆成多個五連線。
-7. 單次得分 = **實際消除的不重複球數 × 同時完成的連線數**。例如一條五連線得 5 分；兩條交叉五連線共有 9 顆，得到 9 × 2 = 18 分；兩條不相交五連線得到 10 × 2 = 20 分。
-8. 消除後保留其他球的位置，沒有重力掉落。
-9. 空格不足 n 個時，先填入剩餘空格，再執行消除。消除後棋盤仍滿才結束；當回合放不下的預覽球不保留到下一回合。
+1. Choose an **8 × 8**, **9 × 9**, or **10 × 10** board.
+2. The number of new beans per turn, **n**, defaults to **3** and can be **4** or **5**. A new game places n beans in distinct random cells. Each batch contains distinct colors drawn from red, blue, green, yellow, and purple.
+3. Click or tap an existing bean to select it. The selected bean gently bounces. Select it again to cancel, or select another bean to change the selection.
+4. Select an empty destination. Breadth-first search finds the shortest path through empty cells using up, down, left, and right moves. Beans cannot move diagonally or pass through other beans. An unreachable destination leaves the board and preview unchanged and retains the selection.
+5. **Every successful move adds the entire preview batch** to random empty cells and generates a new preview. New beans are added before all completed lines are checked, even when the move itself creates a line.
+6. A continuous line of **five or more beans of the same color** clears horizontally, vertically, or along either diagonal. A longer run counts as one line, not several overlapping five-bean lines.
+7. **Points = unique beans cleared × lines completed simultaneously.** One five-bean line earns 5 points. Two crossing five-bean lines contain 9 unique beans and earn 9 × 2 = 18 points. Two separate five-bean lines earn 10 × 2 = 20 points.
+8. Other beans stay in place after a clear. There is no gravity.
+9. If fewer than n empty cells remain, fill the available cells and then check for clears. The game ends only if the board is still full after clearing. Beans that did not fit are not carried into the next turn.
 
-**變更棋盤大小、變更 n，或按「重新開始／再玩一次」，都會重新開局**：分數歸零、取消選取與 Combo，依新設定隨機產生 n 顆初始球及新的預覽。最高分會保留。
+**Changing the board size or n, selecting Restart game, or selecting Play again starts a new game.** The score, selection, and combo reset; the chosen settings determine the initial beans and new preview. The high score is preserved. Changing the language does not restart the game.
 
-## 遊戲記憶與恢復
+## Saving and resuming
 
-未結束的遊戲會立即存入目前裝置、目前瀏覽器的 `localStorage`。重新整理、關閉後再開啟相同網址時，會恢復棋盤上的球、棋盤尺寸、n、下一批預覽、分數、選取球、Combo 與提示訊息。資料不會上傳伺服器，也不會跨裝置或跨瀏覽器同步。
+An unfinished game is saved immediately to `localStorage` in the current browser on the current device. Refreshing or reopening the same website restores the board, board size, n, preview, score, selection, combo, and status message. Progress is not uploaded to a server or synchronized across devices or browsers.
 
-- 每次選取／取消選取，以及每個有效移動都會同步存檔，不依賴關閉分頁事件。
-- 有效移動先完成邏輯上的移動、亂數補球、消除與計分，再原子寫入完整回合結果；動畫僅呈現過程。在動畫中重新整理會恢復該回合完成後的棋盤，不會重複補球或重新抽色。
-- 按重來或變更任一設定會移除舊局，並立即存下新局。遊戲失敗則移除該局進度，重新整理會開新局。
-- 最高分使用獨立紀錄，重來或失敗都不會清除最高分。
-- 存檔包含版本與資料驗證；格式損壞、尺寸／顏色不合法或已失敗的棋盤不會載入，會正常開新局。
-- 清除瀏覽器網站資料或使用無法保留資料的瀏覽模式，會影響進度保留。儲存被封鎖或寫入失敗時仍可遊玩，畫面會提示目前無法儲存進度。
+- Selection changes and valid moves are saved synchronously; saving does not depend on a tab-close event.
+- Each accepted move computes movement, random placement, clearing, and scoring before atomically saving the complete result. Animations present that result afterward. Refreshing during an animation resumes the completed turn without adding another batch or drawing new colors.
+- Restarting or changing a game setting replaces the previous save with a new game. Losing removes that game's save, so refreshing starts a new game.
+- The high score has a separate record and survives restarts and losses.
+- Saves are versioned and validated. Invalid dimensions, colors, data formats, and already-full boards are rejected without breaking startup.
+- Status codes and numeric parameters allow the same save to be displayed in either language. Older saves containing Chinese messages are migrated without discarding the game.
+- Clearing browser site data, or using a browsing mode that cannot retain it, affects saved progress. If storage is blocked or a write fails, the game remains playable and displays a message explaining that progress cannot be saved.
 
-## 目錄與模組責任
+## Project structure
 
 ```text
-index.html                       網頁結構與無障礙標記
-dot_and_crown_fixed.html          舊入口轉址
+README.md                        Main English documentation
+README.zh-TW.md                  Traditional Chinese documentation
+index.html                       Page structure and accessibility markup
+dot_and_crown_fixed.html          Redirect from the previous entry
 assets/
-  doudou-icon.png                 豆豆圖示生成原圖
-  doudou-icon-{32,180,512}.png     分頁、手機主畫面與分享用圖示
-  doudou.ico                      多尺寸瀏覽器分頁圖示
-  README.md                       圖示用途、生成方式與提示詞
+  doudou-icon.png                 Original generated bean icon
+  doudou-icon-{32,180,512}.png     Tab, home-screen, and sharing icons
+  doudou.ico                      Multi-resolution browser icon
+  README.md                       Icon usage and generation prompt
 src/
-  main.js                        建立並組合各模組，啟動遊戲
-  config.js                      尺寸、n、連線門檻、方向、儲存鍵值
+  main.js                        Compose the modules and start the app
+  config.js                      Sizes, line threshold, directions, storage keys
   board/
-    board.js                     棋盤資料、隨機空格、BFS、移動與清除
-    board-view.js                棋盤 DOM、選取樣式、滑鼠／觸控／鍵盤輸入
+    board.js                     Board data, empty cells, BFS, movement, clearing
+    board-view.js                Board DOM, selection, mouse/touch/keyboard input
   elements/
-    ball.js                      顏色、批次亂數、共用球元素工廠
+    ball.js                      Color IDs, random batches, shared bean elements
   game/
-    game-a.js                    遊戲 A 狀態與回合規則，無 DOM 相依
-    lines.js                     四方向連線偵測、交叉去重與線數計算
-    controller.js                協調回合、動畫、UI 與最高分
+    game-a.js                    Game A state and turn rules, without DOM access
+    lines.js                     Four-direction detection and crossing deduplication
+    controller.js                Coordinate turns, animation, UI, and persistence
+    status.js                    Language-neutral status codes and legacy saves
+  i18n/
+    messages.js                  English and Traditional Chinese dictionaries
+    translator.js                Language preference, formatting, page localization
   ui/
-    game-ui.js                   設定、預覽、計分、王座與結束視窗
-    ball-animator.js              選定路徑的史萊姆動畫與消除動畫
+    game-ui.js                   Settings, preview, scores, towers, dialogs
+    ball-animator.js              Slime-like movement and clearing animations
   services/
-    high-score.js                隔離瀏覽器儲存與例外處理
-    game-session.js              裝置本機對局存檔、版本及讀寫錯誤處理
+    high-score.js                High-score storage and error handling
+    game-session.js              Versioned device-local game saves
 styles/
-  base.css                       色彩、字體、全域基礎樣式與焦點
-  layout.css                     頁面、側欄、設定列與主面板配置
-  ui.css                         控制項、王座、分數、預覽與彈窗
-  board.css                      流式方形棋盤與格子
-  elements.css                   球的顏色與動畫
-  responsive.css                 手機、平板及橫向短螢幕版面
+  base.css                       Colors, typography, global styles, focus
+  layout.css                     Header controls, sidebars, settings, main panel
+  ui.css                         Controls, towers, scores, preview, dialogs
+  board.css                      Fluid square board and cells
+  elements.css                   Bean colors and animation
+  responsive.css                 Phone, tablet, and short landscape layouts
 scripts/
-  serve.mjs                      本機靜態伺服器
-  build.mjs                      以允許清單產生 dist/ 靜態網站
-tests/                           規則、UI 整合、非同步競態與靜態資源測試
-.github/workflows/pages.yml       測試、建置、GitHub Pages 部署
-LICENSE.md                       授權全文
+  serve.mjs                      Local static server
+  build.mjs                      Build dist/ using an explicit allowlist
+tests/                           Rules, UI, persistence, language, static assets
+.github/workflows/pages.yml       Tests, build, and GitHub Pages deployment
+LICENSE.md                       Full license text
 ```
 
-依賴方向：`main → controller → GameA / Board / UI / Animator / Store`。`GameA`、`Board`、連線偵測不讀取 `document`、不操作 DOM，也不等待動畫，可在 Node.js 直接測試。UI 只呈現狀態；合法移動、隨機補球、消除與得分由遊戲規則決定。
+Dependencies flow from `main` to the controller, game, board, UI, animator, and storage. `GameA`, `Board`, and line detection do not access `document` or wait for animation and can be tested directly in Node.js. The UI presents state; the rules decide legal moves, placement, clearing, and points. Translation dictionaries and language preferences are separate from the game rules.
 
-## 回合資料流程
+## Turn flow
 
 ```mermaid
 flowchart TD
-    A[選取球並點擊空格] --> B{BFS 找到路徑?}
-    B -->|否| C[顯示阻擋提示，保留棋盤與預覽]
-    B -->|是| D[計算移動、補球、下一批預覽、消除與計分]
-    D --> E[同步存下完整回合，失敗局則清除存檔]
-    E --> F[播放最短路徑移動與補球動畫]
-    F --> G[播放消除動畫，更新分數與畫面]
-    G --> H{消除後棋盤仍滿?}
-    H -->|是| I[顯示遊戲結束]
-    H -->|否| A
+    A[Select a bean and an empty destination] --> B{Does BFS find a path?}
+    B -->|No| C[Show a blocked-path message and keep the board]
+    B -->|Yes| D[Compute movement, spawn, preview, clears, and points]
+    D --> E[Save the complete turn or remove a lost game]
+    E --> F[Animate the shortest path and new beans]
+    F --> G[Animate clears and update the UI]
+    G --> H{Is the board still full?}
+    H -->|Yes| I[Show game over]
+    H -->|No| A
 ```
 
-`GameController.start()` 優先讀取並驗證裝置存檔，沒有有效存檔時才開新局。`GameA.toSnapshot()`／`fromSnapshot()` 負責可還原的規則狀態，`GameSessionStore` 負責版本與 `localStorage` 讀寫，UI 依還原後的狀態同步設定選單與畫面。
+`GameController.start()` restores a valid device-local save before deciding to create a new game. `GameA.toSnapshot()` and `fromSnapshot()` handle restorable rule state; `GameSessionStore` handles versioned storage. The restored state updates both the settings and the board.
 
-`GameController` 在每次重新開始時增加回合版本並取消進行中的移動動畫。每個非同步階段完成後都檢查版本，避免舊局的動畫或延遲改動新局或覆寫新存檔，也避免連點觸發重複移動。棋盤與球數選單都可中斷當前動畫並開始新局。
+Restarting increments the controller version and cancels active movement. Every asynchronous stage checks that version before continuing, so an old animation cannot modify a new game or overwrite its save. Both game settings can interrupt animation and start a fresh game. Language changes update the displayed text and accessibility labels in place, leaving the current turn intact.
 
-## 裝置與操作
+## Devices and controls
 
-| 可用視窗寬度 | 版面 |
+| Viewport width | Layout |
 | --- | --- |
-| 320–600 px 手機 | 國王面板、棋盤、挑戰者面板依序排列；按鈕及設定可換行 |
-| 601–1023 px 平板／窄筆電視窗 | 兩個側欄並排在上，棋盤置中於下 |
-| 1024 px 以上筆電／桌機 | 左右王座與中央棋盤三欄排列 |
+| 320–600 px: phones | King panel, board, then challenger panel; controls wrap |
+| 601–1023 px: tablets or narrow laptop windows | Both side panels above a centered board |
+| 1024 px and above: laptops and desktops | Left throne, central board, right throne |
 
-棋盤以容器寬度與等比例 CSS Grid 縮放，8／9／10 格都不使用固定格寬。橫向或短螢幕可自然垂直捲動；支援瀏海安全區，避免以裁切內容掩蓋溢出。
+The square CSS Grid board scales with its container for all three board sizes. Short or landscape screens can scroll vertically. Safe-area padding supports notched displays; content is not clipped to hide overflow.
 
-- 滑鼠與觸控使用相同選球、選目標操作，不要求拖曳。
-- 設定與主要按鈕至少 44 px 高，選單字體避免手機自動放大。
-- 鍵盤可用 Tab 移入格子、方向鍵切換格子，Enter／空白鍵選球或移動。
-- 遵循 `prefers-reduced-motion`，降低動態效果時跳過跳動與移動動畫。
-- 目標為支援 ES Modules、CSS Grid、`aspect-ratio` 與 Web Animations API 的現代 Chrome、Edge、Safari、Firefox。
+- Mouse and touch share the same select-then-destination interaction; dragging is not required.
+- Settings and primary buttons are at least 44 px tall. Select font sizes avoid automatic mobile zoom.
+- Use Tab to focus a cell, arrow keys to navigate, and Enter or Space to select or move.
+- `prefers-reduced-motion` skips bouncing and movement animation.
+- The target browsers are modern Chrome, Edge, Safari, and Firefox with ES Modules, CSS Grid, `aspect-ratio`, and Web Animations API support.
 
-### 本次瀏覽器驗證
+### Previous browser layout checks
 
-使用 Windows Chrome 的 Responsive 裝置模擬檢查已部署的線上版本：
+Before the language selector was added, the deployed game was checked in Windows Chrome's Responsive device emulation:
 
-| 模擬視窗 | 驗證內容 |
+| Emulated viewport | Checked |
 | --- | --- |
-| 320 × 900 | 手機直向、8 × 8／10 × 10 棋盤、3／5 顆預覽、設定自動換行 |
-| 768 × 1024 | 平板直向、上方雙側欄與置中棋盤、10 × 10／5 顆預覽 |
-| 1366 × 768 | 筆電、左右側欄與中央棋盤、10 × 10／5 顆預覽、直向捲動 |
+| 320 × 900 | Phone layout, 8 × 8 and 10 × 10 boards, 3 and 5 preview beans, wrapping settings |
+| 768 × 1024 | Tablet layout, two upper side panels, centered 10 × 10 board, 5-bean preview |
+| 1366 × 768 | Laptop layout, three columns, 10 × 10 board, 5-bean preview, vertical scrolling |
 
-上述版面未見橫向溢出；線上版本也已實際操作選球、移動及整批補球。這是 Chrome 裝置模擬驗證，尚未逐一使用實體 iPhone／iPad 或 Safari／Firefox 驗證。
+These checks found no horizontal overflow, and selecting, moving, and spawning beans were exercised on the live game. This is Chrome emulation, not testing on every physical iPhone/iPad or in Safari/Firefox.
 
-## 測試與建置
+The bilingual interface is covered by automated DOM integration tests. Its updated layout still needs visual verification in a browser.
+
+## Tests and build
 
 ```powershell
 npm test
@@ -149,31 +169,28 @@ npm run build
 node scripts/serve.mjs --dir dist --port 4174
 ```
 
-測試涵蓋設定組合、最短路徑與阻擋、整批補球、四方向消除、長連線、交叉 Combo、滿盤、重新整理恢復、動畫中重整／重來、設定變更重開、存檔損壞與儲存失敗、UI／鍵盤，以及 ES Modules 相對路徑與 HTTP MIME。DOM 整合測試使用輕量替身；不等同各實體裝置的瀏覽器測試。
+Tests cover settings, shortest paths, blocked moves, batch spawning, all line directions, long lines, crossing combos, full boards, reload recovery, refresh/restart during animation, settings resets, corrupt saves, storage failures, keyboard input, language switching, legacy save compatibility, relative ES Module imports, and HTTP MIME types. DOM integration tests use lightweight doubles and do not replace real-device browser testing.
 
-`dist/` 只包含遊戲入口、`src/`、`styles/`、`assets/`、舊入口與說明／授權，不會上傳 `.git/`、測試、開發快取或環境檔。`dist/` 是自動產物，不提交到 Git。
+`dist/` contains only the game entries, `src/`, `styles/`, `assets/`, both READMEs, and the license. Git data, tests, development caches, and environment files are excluded. Build output is ignored by Git.
 
 ## GitHub Pages
 
-儲存庫使用 `main` 分支。首次設定在 GitHub 的 **Settings → Pages → Build and deployment → Source** 選擇 **GitHub Actions**。
+The repository uses `main`. For the first deployment, set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**.
 
-每次推送 `main`，`.github/workflows/pages.yml` 會依序執行測試、建置、上傳 `dist/` 與部署。Pull Request 僅驗證，不部署；亦可在 Actions 手動執行。部署結果可在儲存庫的 Actions／Deployments 查看。
+Every push to `main` runs tests, builds the static site, uploads `dist/`, and deploys it through `.github/workflows/pages.yml`. Pull requests validate without deploying. The workflow can also be run manually. Results appear in Actions and Deployments.
 
-所有 CSS／JavaScript 都使用相對路徑，可在 `https://m80ta.github.io/dotdotgame/` 的專案子路徑正常載入。
+All CSS and JavaScript paths are relative, so the game works under the project path at <https://m80ta.github.io/dotdotgame/>.
 
-## 後續新增遊戲 B
+## Adding Game B
 
-在 `src/game/` 新增獨立規則模組，再由 Controller 選擇對應遊戲；可共用 `Board`、`BoardView`、球元素與 UI。完成對應規則與測試後，再開放右上角遊戲 B 選項。
+Create a separate rules module in `src/game/` and have the controller select the appropriate game. Reuse `Board`, `BoardView`, bean elements, and UI where applicable. Enable Game B in the menu only after its rules and tests are ready.
 
-## 授權
+## License
 
-本專案採用 [PolyForm Noncommercial License 1.0.0](LICENSE.md)。
+This project uses the [PolyForm Noncommercial License 1.0.0](./LICENSE.md).
 
-- 允許為非商業目的使用、複製、修改及分享，包括個人娛樂、學習與實驗。
-- 分享原始檔或修改版時，必須保留授權全文或其官方網址，以及 `Required Notice:` 著作權聲明。
-- 超出本授權允許用途的商業使用，例如販售、付費服務、廣告營利或商業產品整合，須先取得著作權人另外的書面許可。
-- 官方條款亦列明慈善組織、教育機構、公共研究機構及政府機構等組織的允許用途；完整範圍與條件以 [LICENSE.md](LICENSE.md) 英文全文為準。
+Noncommercial use, copying, modification, and sharing are permitted under its terms. Preserve the license text or its official URL and the required copyright notice when redistributing the original or a modified version. Commercial uses outside the license's permitted purposes require separate written permission. The full English text in `LICENSE.md` governs the scope and conditions, including the listed permitted organizational uses.
 
 Required Notice: Copyright (c) 2026 M80ta
 
-商業授權需求請聯絡專案維護者 [M80ta](https://github.com/M80ta)。
+For commercial licensing, contact the project maintainer [M80ta](https://github.com/M80ta).

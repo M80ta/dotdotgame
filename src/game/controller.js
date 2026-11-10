@@ -2,16 +2,18 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import {GameA} from './game-a.js';
 import {Board} from '../board/board.js';
+import {restoreStatus} from './status.js';
 
 /** Coordinates model, UI, persistence and async animation; no board algorithms. */
 export class GameController {
     constructor({ui, boardView, animator, store, sessionStore, random = Math.random, onError = console.error}) {
         Object.assign(this, {ui, boardView, animator, store, sessionStore, random, onError});
+        this.i18n = ui.i18n;
         this.version = 0;
         this.processing = false;
         this.highScore = store.read();
         this.boardView.onCellClick = (r, c) => this.handleCellClick(r, c);
-        ui.bind({restart: () => this.restart()});
+        ui.bind({restart: () => this.restart(), changeLanguage: language => this.changeLanguage(language)});
     }
 
     start() {
@@ -27,13 +29,14 @@ export class GameController {
         this.activateGame(game, {newCells: game.initialBalls});
     }
 
-    activateGame(game, {startingHighScore = this.highScore, combo = 0, message, newCells = new Set()} = {}) {
+    activateGame(game, {startingHighScore = this.highScore, combo = 0, message, status, newCells = new Set()} = {}) {
         this.version++;
         this.animator.cancel();
         this.game = game;
         this.startingHighScore = startingHighScore;
         this.combo = combo;
-        this.message = message ?? `先選球，再點可到達的空格；每次移動後隨機新增 ${game.batchSize} 顆球`;
+        this.status = restoreStatus(status, message, game);
+        this.message = this.i18n.t(`hint.${this.status.code}`, this.status.params);
         this.lastSaveSucceeded = true;
         this.processing = false;
         this.updateHighScore();
@@ -48,11 +51,30 @@ export class GameController {
         this.ui.renderPreview(game.preview);
         this.ui.renderScores(game.score, this.highScore, this.startingHighScore);
         this.ui.setCombo(this.combo);
-        this.ui.setHint(this.lastSaveSucceeded === false && !game.isOver
-            ? `${this.message}（瀏覽器目前無法儲存進度）` : this.message);
+        this.renderHint();
         this.boardView.render(game.board, game.selectedBall, newCells);
         if (game.isOver) this.ui.showGameOver(game.score, this.startingHighScore);
         else this.ui.hideGameOver();
+    }
+
+    setStatus(code, params = {}) {
+        this.status = {code, params};
+        this.message = this.i18n.t(`hint.${code}`, params);
+    }
+
+    renderHint() {
+        const message = this.processing ? this.i18n.t('hint.moving') : this.message;
+        this.ui.setHint(this.lastSaveSucceeded === false && !this.game.isOver
+            ? this.i18n.t('hint.unsaved', {message}) : message);
+    }
+
+    changeLanguage(language) {
+        if (!this.i18n.setLanguage(language)) return;
+        this.ui.localize();
+        this.boardView.localize();
+        this.message = this.i18n.t(`hint.${this.status.code}`, this.status.params);
+        this.renderHint();
+        this.persistSession();
     }
 
     updateHighScore() {
@@ -67,31 +89,26 @@ export class GameController {
         if (this.game.isOver) return this.sessionStore.clear();
         const saved = this.sessionStore.save({
             game: this.game.toSnapshot(), startingHighScore: this.startingHighScore,
-            combo: this.combo, message: this.message
+            combo: this.combo, message: this.message, status: this.status
         });
         this.lastSaveSucceeded = saved;
-        if (!saved) this.ui.setHint(`${this.message}（瀏覽器目前無法儲存進度）`);
+        this.renderHint();
         return saved;
     }
 
     finishProcessing() {
         this.processing = false;
         this.ui.setProcessing(false);
+        this.renderHint();
     }
 
     async handleCellClick(r, c) {
         if (this.processing) return;
         const move = this.game.selectCell(r, c);
-        const messages = {
-            selected: '已選取球，請點擊可到達的空格；再次點選可取消',
-            deselected: '先選擇一顆球，再點擊可到達的空格',
-            'selection-required': '請先選擇棋盤上的一顆球',
-            blocked: '無法到達：路徑被球擋住了，請選擇其他空格'
-        };
         if (move.type !== 'move') {
-            if (messages[move.type]) {
-                this.message = messages[move.type];
-                this.ui.setHint(this.message);
+            if (move.type !== 'ignored') {
+                this.setStatus(move.type);
+                this.renderHint();
             }
             if (move.type === 'selected' || move.type === 'deselected') this.boardView.render(this.game.board, this.game.selectedBall);
             if (move.type !== 'ignored') this.persistSession();
@@ -103,7 +120,7 @@ export class GameController {
         this.processing = true;
         this.ui.setProcessing(true);
         this.ui.setCombo(0);
-        this.ui.setHint('球正在沿最短路徑移動…');
+        this.renderHint();
         try {
             // Commit one complete turn before any await. Refreshing during an
             // animation restores this result, without repeating random spawns.
@@ -113,9 +130,9 @@ export class GameController {
             const result = game.finishTurn(lines);
             this.updateHighScore();
             this.combo = result.combo;
-            this.message = game.isOver ? '棋盤已滿，遊戲結束'
-                : result.cleared > 0 ? `消除 ${result.cleared} 顆 × ${result.combo} 條連線，獲得 ${result.earned} 分`
-                : `已新增 ${spawned.size} 顆球；請選球繼續移動`;
+            if (game.isOver) this.setStatus('game-over');
+            else if (result.cleared > 0) this.setStatus('cleared', {balls: result.cleared, lines: result.combo, points: result.earned});
+            else this.setStatus('spawned', {count: spawned.size});
             this.persistSession();
 
             await this.animator.move(move);
@@ -131,7 +148,7 @@ export class GameController {
             if (version === this.version) {
                 this.onError(error);
                 game.selectedBall = null;
-                if (!game.isOver) this.message = '動畫未完成，請繼續選球';
+                if (!game.isOver) this.setStatus('interrupted');
                 this.renderGame();
                 this.persistSession();
             }

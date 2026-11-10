@@ -27,7 +27,7 @@ test('static server serves modules with JavaScript MIME and excludes Git/config/
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
     const base = `http://127.0.0.1:${server.address().port}`;
     try {
-        for (const route of ['/', '/index.html', '/src/main.js', '/styles/responsive.css', '/assets/doudou-icon-32.png', '/assets/doudou.ico', '/dot_and_crown_fixed.html']) {
+        for (const route of ['/', '/index.html', '/src/main.js', '/styles/responsive.css', '/assets/doudou-icon-32.png', '/assets/doudou.ico', '/dot_and_crown_fixed.html', '/README.md', '/README.zh-TW.md']) {
             const response = await fetch(base + route);
             assert.equal(response.status, 200, route);
             if (route.endsWith('.js')) assert.match(response.headers.get('content-type'), /text\/javascript/);
