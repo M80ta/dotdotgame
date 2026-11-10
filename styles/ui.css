@@ -1,0 +1,208 @@
+/* Settings, score panels, towers, and modal;
+no board or ball rules. */
+.game-switcher select, .settings-bar select {
+    min-height: 44px;
+    max-width: 100%;
+    background: #0f172a;
+    color: var(--text-color);
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 6px 8px;
+    cursor: pointer;
+}
+
+.settings-bar select {
+    font-weight: bold;
+}
+
+.sidebar h3 {
+    font-size: 1.05rem;
+    margin-bottom: 10px;
+    color: var(--accent-gold);
+}
+
+.sidebar-caption {
+    font-size: 0.8rem;
+    color: #a0a0a0;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.sidebar-caption.new-record {
+    color: var(--accent-gold);
+}
+
+.score-display {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #fff;
+    margin-top: 5px;
+    overflow-wrap: anywhere;
+}
+
+.score-summary strong {
+    font-size: 1.2rem;
+    color: var(--accent-gold);
+}
+
+.tower-container {
+    --tower-level: 0%;
+    width: 90px;
+    height: clamp(170px, 35vh, 300px);
+    background: #0f172a;
+    border-radius: 8px;
+    border: 2px solid #334155;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    overflow: hidden;
+    margin: 10px 0;
+    box-shadow: inset 0 4px 6px rgb(0 0 0 / 60%);
+}
+
+.tower-fill {
+    width: 100%;
+    height: var(--tower-level);
+    background: linear-gradient(to top, #3b82f6, #60a5fa);
+    transition: height 0.4s ease-in-out, width 0.4s ease-in-out;
+}
+
+.king-tower-fill {
+    background: linear-gradient(to top, #d97706, #fbbf24);
+}
+
+.character-avatar {
+    position: absolute;
+    bottom: clamp(5px, var(--tower-level), calc(100% - 44px));
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2.2rem;
+    transition: bottom 0.4s ease-in-out, left 0.4s ease-in-out;
+    text-shadow: 0 2px 4px rgb(0 0 0 / 80%);
+    z-index: 2;
+}
+
+.ball-queue {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    list-style: none;
+}
+
+.ball-queue-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.queue-position {
+    color: #a0a0a0;
+    font-size: 0.75rem;
+}
+
+.queue-hint {
+    width: 100%;
+    min-height: 2.8em;
+    color: #b5b5bd;
+    font-size: 0.8rem;
+    font-weight: normal;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.combo-badge {
+    background: #ef4444;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    display: none;
+    animation: pulse 0.5s infinite alternate;
+}
+
+.btn {
+    background: var(--primary-blue);
+    color: white;
+    border: none;
+    min-height: 44px;
+    padding: 10px 18px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgb(0 173 181 / 30%);
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgb(0 0 0 / 70%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    padding: 16px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.modal {
+    background: var(--panel-bg);
+    border: 2px solid var(--accent-gold);
+    padding: clamp(18px, 5vw, 30px);
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgb(0 0 0 / 80%);
+    max-width: 400px;
+    width: 100%;
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    overflow-wrap: anywhere;
+}
+
+.modal h2 {
+    color: var(--accent-gold);
+    font-size: clamp(1.4rem, 5vw, 1.8rem);
+    margin-bottom: 10px;
+}
+
+.modal p {
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+}
+
+@keyframes pulse {
+    from {
+        transform: scale(1);
+    }
+
+    to {
+        transform: scale(1.1);
+    }
+
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .btn:hover {
+        background: #008f95;
+        transform: translateY(-2px);
+    }
+
+}

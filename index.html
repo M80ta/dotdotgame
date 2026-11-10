@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: 2026 M80ta
+SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+Required Notice: Copyright (c) 2026 M80ta
+License: https://polyformproject.org/licenses/noncommercial/1.0.0
+Commercial use outside the permitted purposes requires separate permission.
+-->
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="description" content="點陣方圓大對決：選球移動、五連線消除，支援手機、平板與電腦的策略小遊戲。">
+    <title>點陣方圓大對決 (Dot & Crown)</title>
+    <link rel="stylesheet" href="./styles/base.css">
+    <link rel="stylesheet" href="./styles/layout.css">
+    <link rel="stylesheet" href="./styles/ui.css">
+    <link rel="stylesheet" href="./styles/board.css">
+    <link rel="stylesheet" href="./styles/elements.css">
+    <link rel="stylesheet" href="./styles/responsive.css">
+    <script type="module" src="./src/main.js"></script>
+</head>
+<body>
+    <div class="game-switcher">
+        <label for="gameModeSelect">遊戲切換：</label>
+        <select id="gameModeSelect">
+            <option value="A" selected>遊戲 A</option>
+            <option value="B" disabled>遊戲 B（尚未開放）</option>
+        </select>
+    </div>
+    <header>
+        <h1>點陣方圓大對決</h1>
+        <p class="subtitle">策略連線消除・挑戰國王寶座</p>
+    </header>
+    <main class="game-container">
+        <aside class="sidebar king-sidebar" aria-label="歷史國王">
+            <div>
+                <h3>👑 歷史國王</h3>
+                <div class="score-display" id="highScoreDisplay">0</div>
+            </div>
+            <div class="tower-container">
+                <div class="tower-fill king-tower-fill" id="kingTowerFill"></div>
+                <div class="character-avatar" id="kingAvatar" aria-hidden="true">🤴</div>
+            </div>
+            <p class="sidebar-caption">王座高度隨紀錄成長</p>
+        </aside>
+        <section class="main-board-area" aria-label="遊戲 A">
+            <div class="settings-bar">
+                <label for="boardSizeSelect">⚙️ 棋盤尺寸設定：</label>
+                <select id="boardSizeSelect">
+                    <option value="8">8 × 8 (經典)</option>
+                    <option value="9">9 × 9 (進階)</option>
+                    <option value="10">10 × 10 (挑戰)</option>
+                </select>
+            </div>
+            <div class="settings-bar">
+                <label for="queueSizeSelect">每回合新增球數 n：</label>
+                <select id="queueSizeSelect">
+                    <option value="3" selected>3 個（預設）</option>
+                    <option value="4">4 個</option>
+                    <option value="5">5 個</option>
+                </select>
+            </div>
+            <div class="status-panel">
+                <div class="next-ball-preview">
+                    <span id="queueLabel">下回合新增：</span>
+                    <ol class="ball-queue" id="ballQueuePreview" aria-labelledby="queueLabel"></ol>
+                    <span class="queue-hint" id="moveHint" role="status" aria-live="polite">先選擇一顆球，再點擊可到達的空格</span>
+                </div>
+                <div class="combo-badge" id="comboBadge">COMBO x1</div>
+                <div class="score-summary">得分：<strong id="currentScore">0</strong></div>
+            </div>
+            <div class="board" id="gameBoard" role="group" aria-label="遊戲 A 棋盤" aria-describedby="moveHint"></div>
+            <div class="controls">
+                <button type="button" class="btn" id="restartBtn">重新開始遊戲</button>
+            </div>
+        </section>
+        <aside class="sidebar player-sidebar" aria-label="當前挑戰者">
+            <div>
+                <h3>🪑 當前挑戰者</h3>
+                <div class="score-display" id="currentScoreDisplay">0</div>
+            </div>
+            <div class="tower-container">
+                <div class="tower-fill" id="playerTowerFill"></div>
+                <div class="character-avatar" id="playerAvatar" aria-hidden="true">🧘</div>
+            </div>
+            <p class="sidebar-caption" id="kingStatusText">超越國王即登基！</p>
+        </aside>
+    </main>
+    <div class="modal-overlay" id="gameOverModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalMessage" aria-hidden="true" inert>
+        <div class="modal">
+            <h2 id="modalTitle">遊戲結束</h2>
+            <p id="modalMessage">棋盤已滿，無可落子位置！</p>
+            <button type="button" class="btn" id="modalRestartBtn">再玩一次</button>
+        </div>
+    </div>
+    <noscript><p class="noscript-message">請啟用 JavaScript 後遊玩此遊戲。</p></noscript>
+</body>
+</html>

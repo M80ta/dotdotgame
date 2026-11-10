@@ -1,0 +1,76 @@
+/* Required Notice: Copyright (c) 2026 M80ta | PolyForm Noncommercial 1.0.0 */
+:root {
+    color-scheme: dark;
+    --bg-color: #1a1a2e;
+    --panel-bg: #162447;
+    --card-bg: #1f4068;
+    --text-color: #e4e4e4;
+    --accent-gold: #ffd700;
+    --accent-glow: rgb(255 215 0 / 40%);
+    --primary-blue: #00adb5;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body, button, select {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: clamp(8px, 2vw, 20px);
+    padding-left: max(clamp(8px, 2vw, 20px), env(safe-area-inset-left));
+    padding-right: max(clamp(8px, 2vw, 20px), env(safe-area-inset-right));
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+button, select {
+    font-size: 1rem;
+    touch-action: manipulation;
+}
+
+button, select, [role='button'] {
+    -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible, select:focus-visible, [role='button']:focus-visible {
+    outline: 3px solid var(--accent-gold);
+    outline-offset: 2px;
+}
+
+button:disabled, select:disabled {
+    cursor: default;
+    opacity: 0.65;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+h1 {
+    font-size: clamp(1.45rem, 4.5vw, 2rem);
+    color: var(--accent-gold);
+    text-shadow: 0 0 10px var(--accent-glow);
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    font-size: 0.95rem;
+    color: #a0a0a0;
+}
+
+.noscript-message {
+    margin: 20px;
+    text-align: center;
+}

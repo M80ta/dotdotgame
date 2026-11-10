@@ -1,0 +1,101 @@
+/* Page composition only. Device adaptations live in responsive.css. */
+.game-switcher {
+    align-self: flex-end;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+}
+
+.game-container {
+    display: grid;
+    grid-template-columns: minmax(140px, 180px) minmax(0, 550px) minmax(140px, 180px);
+    grid-template-areas: 'king board player';
+    gap: clamp(10px, 2vw, 20px);
+    align-items: start;
+    justify-content: center;
+    width: 100%;
+    max-width: 990px;
+}
+
+.king-sidebar {
+    grid-area: king;
+}
+
+.player-sidebar {
+    grid-area: player;
+}
+
+.sidebar, .main-board-area {
+    background: var(--panel-bg);
+    border: 2px solid var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgb(0 0 0 / 40%);
+    min-width: 0;
+}
+
+.sidebar {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.main-board-area {
+    grid-area: board;
+    padding: clamp(10px, 2vw, 20px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.settings-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+    background: rgb(255 255 255 / 5%);
+    padding: 6px 10px;
+    border-radius: 6px;
+    width: 100%;
+}
+
+.status-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 15px;
+    align-items: center;
+    background: rgb(0 0 0 / 20%);
+    padding: 10px 12px;
+    border-radius: 8px;
+}
+
+.next-ball-preview {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+    font-weight: bold;
+    font-size: 0.95rem;
+}
+
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 15px;
+    width: 100%;
+}

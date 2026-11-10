@@ -1,0 +1,102 @@
+/* Ball colors and animation;
+independent of page composition. */
+.ball {
+    width: 80%;
+    height: 80%;
+    border-radius: 50%;
+    box-shadow: inset -3px -3px 6px rgb(0 0 0 / 50%), 0 2px 4px rgb(0 0 0 / 40%);
+}
+
+.ball-preview-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    box-shadow: inset -3px -3px 6px rgb(0 0 0 / 40%), 0 2px 5px rgb(0 0 0 / 30%);
+}
+
+.cell.selected .ball {
+    animation: selectedBounce 0.55s ease-in-out infinite;
+}
+
+.ball.new-ball {
+    animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.ball.moving-ball {
+    position: absolute;
+    z-index: 3;
+    pointer-events: none;
+    animation: none;
+    will-change: transform;
+}
+
+.ball.clearing {
+    animation: clearBall 0.24s ease-in forwards;
+}
+
+.color-0 {
+    background: radial-gradient(circle at 30% 30%, #f87171, #dc2626);
+}
+
+.color-1 {
+    background: radial-gradient(circle at 30% 30%, #60a5fa, #2563eb);
+}
+
+.color-2 {
+    background: radial-gradient(circle at 30% 30%, #4ade80, #16a34a);
+}
+
+.color-3 {
+    background: radial-gradient(circle at 30% 30%, #facc15, #ca8a04);
+}
+
+.color-4 {
+    background: radial-gradient(circle at 30% 30%, #c084fc, #9333ea);
+}
+
+@keyframes selectedBounce {
+    0%, 100% {
+        transform: translateY(0) scale(1.04, 0.96);
+    }
+
+    50% {
+        transform: translateY(-4px) scale(0.97, 1.04);
+    }
+
+}
+
+@keyframes clearBall {
+    40% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0);
+    }
+
+    to {
+        transform: scale(1);
+    }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition: none !important;
+    }
+
+    .ball.new-ball, .cell.selected .ball, .ball.clearing, .combo-badge {
+        animation: none;
+    }
+
+}
