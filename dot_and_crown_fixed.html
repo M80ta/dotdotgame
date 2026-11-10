@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>點陣方圓大對決 (Dot & Crown)</title>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --panel-bg: #162447;
+            --card-bg: #1f4068;
+            --text-color: #e4e4e4;
+            --accent-gold: #ffd700;
+            --accent-glow: rgba(255, 215, 0, 0.4);
+            --primary-blue: #00adb5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .game-switcher {
+            align-self: flex-end;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .game-switcher select {
+            background: var(--panel-bg);
+            color: var(--text-color);
+            border: 1px solid var(--card-bg);
+            border-radius: 6px;
+            padding: 6px 10px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: var(--accent-gold);
+            text-shadow: 0 0 10px var(--accent-glow);
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            font-size: 0.95rem;
+            color: #a0a0a0;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            align-items: flex-start;
+            max-width: 1050px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* 側邊欄：國王與挑戰者王座 */
+        .sidebar {
+            background-color: var(--panel-bg);
+            border: 2px solid var(--card-bg);
+            border-radius: 12px;
+            width: 200px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        .sidebar h3 {
+            font-size: 1.05rem;
+            margin-bottom: 10px;
+            text-align: center;
+            color: var(--accent-gold);
+        }
+
+        .tower-container {
+            width: 90px;
+            height: 300px;
+            background-color: #0f172a;
+            border-radius: 8px;
+            border: 2px solid #334155;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            overflow: hidden;
+            margin: 10px 0;
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.6);
+        }
+
+        .tower-fill {
+            width: 100%;
+            background: linear-gradient(to top, #3b82f6, #60a5fa);
+            transition: height 0.4s ease-in-out;
+            position: relative;
+        }
+
+        .king-tower-fill {
+            background: linear-gradient(to top, #d97706, #fbbf24);
+        }
+
+        .character-avatar {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2.2rem;
+            transition: bottom 0.4s ease-in-out;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            z-index: 2;
+        }
+
+        .score-display {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fff;
+            margin-top: 5px;
+        }
+
+        /* 主遊戲區 */
+        .main-board-area {
+            background-color: var(--panel-bg);
+            border: 2px solid var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            flex-grow: 1;
+            max-width: 550px;
+        }
+
+        .status-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 15px;
+            align-items: center;
+            background: rgba(0,0,0,0.2);
+            padding: 10px 15px;
+            border-radius: 8px;
+        }
+
+        .next-ball-preview {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            font-size: 0.95rem;
+        }
+
+        .ball-queue {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            list-style: none;
+        }
+
+        .ball-queue-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .queue-position {
+            color: #a0a0a0;
+            font-size: 0.75rem;
+        }
+
+        .queue-hint {
+            width: 100%;
+            color: #a0a0a0;
+            font-size: 0.8rem;
+            font-weight: normal;
+        }
+
+        .ball-preview-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            box-shadow: inset -3px -3px 6px rgba(0,0,0,0.4), 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .combo-badge {
+            background-color: #ef4444;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: none;
+            animation: pulse 0.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        /* 設定面板區 */
+        .settings-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+            background: rgba(255,255,255,0.05);
+            padding: 6px 12px;
+            border-radius: 6px;
+        }
+
+        .settings-bar select {
+            background: #0f172a;
+            color: var(--text-color);
+            border: 1px solid #334155;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* 棋盤網格 */
+        .board {
+            position: relative;
+            display: grid;
+            gap: 5px;
+            background-color: #0f172a;
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px solid #334155;
+            max-width: 100%;
+            overflow: auto;
+        }
+
+        .cell {
+            aspect-ratio: 1 / 1;
+            background-color: #1e293b;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .cell:hover {
+            background-color: #334155;
+        }
+
+        .cell.active-hover:hover {
+            transform: scale(0.92);
+        }
+
+        .cell.selected {
+            outline: 2px solid var(--accent-gold);
+            outline-offset: -2px;
+            background-color: #334155;
+        }
+
+        .cell.selected .ball {
+            animation: selectedBounce 0.55s ease-in-out infinite;
+        }
+
+        /* 圓球樣式 */
+        .ball {
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            box-shadow: inset -3px -3px 6px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .ball.new-ball {
+            animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .ball.moving-ball {
+            position: absolute;
+            z-index: 3;
+            pointer-events: none;
+            animation: none;
+            transition: none;
+            will-change: transform;
+        }
+
+        .ball.clearing {
+            animation: clearBall 0.24s ease-in forwards;
+        }
+
+        @keyframes selectedBounce {
+            0%, 100% { transform: translateY(0) scale(1.04, 0.96); }
+            50% { transform: translateY(-5px) scale(0.97, 1.04); }
+        }
+
+        @keyframes clearBall {
+            40% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .ball.new-ball, .cell.selected .ball, .ball.clearing, .combo-badge {
+                animation: none;
+            }
+        }
+
+        /* 顏色定義 */
+        .color-0 { background: radial-gradient(circle at 30% 30%, #f87171, #dc2626); } /* 紅 */
+        .color-1 { background: radial-gradient(circle at 30% 30%, #60a5fa, #2563eb); } /* 藍 */
+        .color-2 { background: radial-gradient(circle at 30% 30%, #4ade80, #16a34a); } /* 綠 */
+        .color-3 { background: radial-gradient(circle at 30% 30%, #facc15, #ca8a04); } /* 黃 */
+        .color-4 { background: radial-gradient(circle at 30% 30%, #c084fc, #9333ea); } /* 紫 */
+
+        /* 按鈕與控制 */
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,173,181,0.3);
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn:hover {
+            background-color: #008f95;
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* 遊戲結束彈窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background-color: var(--panel-bg);
+            border: 2px solid var(--accent-gold);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .modal h2 {
+            color: var(--accent-gold);
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .modal p {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        /* RWD 響應式調整 */
+        @media (max-width: 768px) {
+            .game-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .sidebar {
+                width: 100%;
+                max-width: 440px;
+                flex-direction: row;
+                justify-content: space-around;
+                align-items: center;
+                padding: 10px;
+            }
+            .tower-container {
+                height: 70px;
+                width: 140px;
+                flex-direction: row;
+                align-items: flex-end;
+            }
+            .tower-fill {
+                width: 0%;
+                height: 100%;
+                background: linear-gradient(to right, #3b82f6, #60a5fa);
+            }
+            .king-tower-fill {
+                background: linear-gradient(to right, #d97706, #fbbf24);
+            }
+            .character-avatar {
+                position: relative;
+                bottom: auto;
+                left: auto;
+                transform: none;
+                font-size: 1.6rem;
+                margin: 0 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-switcher">
+        <label for="gameModeSelect">遊戲切換：</label>
+        <select id="gameModeSelect">
+            <option value="A" selected>遊戲 A</option>
+            <option value="B" disabled>遊戲 B（尚未開放）</option>
+        </select>
+    </div>
+
+    <header>
+        <h1>點陣方圓大對決</h1>
+        <p class="subtitle">策略連線消除・挑戰國王寶座</p>
+    </header>
+
+    <div class="game-container">
+        <!-- 歷史國王 -->
+        <div class="sidebar">
+            <div>
+                <h3>👑 歷史國王</h3>
+                <div class="score-display" id="highScoreDisplay">0</div>
+            </div>
+            <div class="tower-container">
+                <div class="tower-fill king-tower-fill" id="kingTowerFill" style="height: 0%;"></div>
+                <div class="character-avatar" id="kingAvatar" style="bottom: 5px;">🤴</div>
+            </div>
+            <div style="font-size: 0.8rem; color: #a0a0a0; text-align: center;">王座高度隨紀錄成長</div>
+        </div>
+
+        <!-- 主棋盤區 -->
+        <div class="main-board-area">
+            <div class="settings-bar">
+                <label for="boardSizeSelect">⚙️ 棋盤尺寸設定：</label>
+                <select id="boardSizeSelect">
+                    <option value="8">8 × 8 (經典)</option>
+                    <option value="9">9 × 9 (進階)</option>
+                    <option value="10">10 × 10 (挑戰)</option>
+                </select>
+            </div>
+
+            <div class="settings-bar">
+                <label for="queueSizeSelect">每回合新增球數 n：</label>
+                <select id="queueSizeSelect">
+                    <option value="3" selected>3 個（預設）</option>
+                    <option value="4">4 個</option>
+                    <option value="5">5 個</option>
+                </select>
+            </div>
+
+            <div class="status-panel">
+                <div class="next-ball-preview">
+                    <span id="queueLabel">下回合新增：</span>
+                    <ol class="ball-queue" id="ballQueuePreview" aria-labelledby="queueLabel"></ol>
+                    <span class="queue-hint" id="moveHint" role="status" aria-live="polite">先選擇一顆球，再點擊可到達的空格</span>
+                </div>
+                <div class="combo-badge" id="comboBadge">COMBO x1</div>
+                <div>
+                    <span>得分：</span>
+                    <strong id="currentScore" style="font-size: 1.2rem; color: var(--accent-gold);">0</strong>
+                </div>
+            </div>
+
+            <div class="board" id="gameBoard" role="group" aria-label="遊戲 A 棋盤"></div>
+
+            <div class="controls">
+                <button class="btn" id="restartBtn">重新開始遊戲</button>
+            </div>
+        </div>
+
+        <!-- 當前挑戰者 -->
+        <div class="sidebar">
+            <div>
+                <h3>🪑 當前挑戰者</h3>
+                <div class="score-display" id="currentScoreDisplay">0</div>
+            </div>
+            <div class="tower-container">
+                <div class="tower-fill" id="playerTowerFill" style="height: 0%;"></div>
+                <div class="character-avatar" id="playerAvatar" style="bottom: 5px;">🧘</div>
+            </div>
+            <div style="font-size: 0.8rem; color: #a0a0a0; text-align: center;" id="kingStatusText">超越國王即登基！</div>
+        </div>
+    </div>
+
+    <!-- 遊戲結束 Modal -->
+    <div class="modal-overlay" id="gameOverModal">
+        <div class="modal">
+            <h2 id="modalTitle">遊戲結束</h2>
+            <p id="modalMessage">棋盤已滿，無可落子位置！</p>
+            <button class="btn" id="modalRestartBtn">再玩一次</button>
+        </div>
+    </div>
+
+    <script>
+        let boardSize = 8;
+        const COLORS_COUNT = 5;
+        const WIN_COUNT = 5; // 連線消除條件
+        const COLOR_NAMES = ['紅色', '藍色', '綠色', '黃色', '紫色'];
+        const MOVE_DIRECTIONS = [[-1, 0], [0, 1], [1, 0], [0, -1]];
+        const LINE_DIRECTIONS = [[0, 1], [1, 0], [1, 1], [1, -1]];
+
+        let board = [];
+        let score = 0;
+        let highScore = 100;
+        
+        // 修正 1：防止 LocalStorage 在某些瀏覽器或安全模式下崩潰導致程式卡死
+        try {
+            const savedScore = localStorage.getItem('dot_crown_highscore');
+            const parsedScore = Number(savedScore);
+            if (savedScore !== null && Number.isFinite(parsedScore) && parsedScore >= 0) {
+                highScore = Math.floor(parsedScore);
+            }
+        } catch (e) {
+            console.warn("LocalStorage is disabled or restricted.");
+        }
+
+        let queueSize = 3;
+        let ballQueue = [];
+        let isGameOver = false;
+        let isProcessing = false;
+        let selectedBall = null;
+        let gameVersion = 0;
+        let activeMoveAnimation = null;
+        let startingHighScore = highScore;
+
+        const boardElement = document.getElementById('gameBoard');
+        const currentScoreElement = document.getElementById('currentScore');
+        const currentScoreDisplay = document.getElementById('currentScoreDisplay');
+        const highScoreDisplay = document.getElementById('highScoreDisplay');
+        const ballQueuePreview = document.getElementById('ballQueuePreview');
+        const restartBtn = document.getElementById('restartBtn');
+        const modalRestartBtn = document.getElementById('modalRestartBtn');
+        const gameOverModal = document.getElementById('gameOverModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const playerTowerFill = document.getElementById('playerTowerFill');
+        const kingTowerFill = document.getElementById('kingTowerFill');
+        const playerAvatar = document.getElementById('playerAvatar');
+        const kingAvatar = document.getElementById('kingAvatar');
+        const comboBadge = document.getElementById('comboBadge');
+        const kingStatusText = document.getElementById('kingStatusText');
+        const boardSizeSelect = document.getElementById('boardSizeSelect');
+        const queueSizeSelect = document.getElementById('queueSizeSelect');
+        const moveHint = document.getElementById('moveHint');
+
+        function initGame() {
+            try {
+                // 讓重新開始前的動畫與非同步回合失效。
+                gameVersion++;
+                if (activeMoveAnimation) {
+                    activeMoveAnimation.cancel();
+                    activeMoveAnimation = null;
+                }
+                boardSize = parseInt(boardSizeSelect.value, 10) || 8;
+                board = Array(boardSize).fill(null).map(() => Array(boardSize).fill(null));
+                score = 0;
+                startingHighScore = highScore;
+                selectedBall = null;
+                isGameOver = false;
+                isProcessing = false;
+                queueSizeSelect.disabled = false;
+                comboBadge.style.display = 'none';
+                gameOverModal.classList.remove('show');
+                
+                highScoreDisplay.textContent = highScore;
+                ballQueue = [];
+                updateQueueSize();
+                const initialBalls = spawnBalls(createColorBatch(queueSize));
+                renderBoard(initialBalls);
+                updateScoreUI();
+                updateTowers();
+            } catch (err) {
+                console.error("Game initialization error:", err);
+            }
+        }
+
+        function createColorBatch(count, existing = []) {
+            const colors = Array.from({length: COLORS_COUNT}, (_, i) => i)
+                .filter(color => !existing.includes(color));
+            const batch = existing.slice(0, count);
+            while (batch.length < count) {
+                const index = Math.floor(Math.random() * colors.length);
+                batch.push(colors.splice(index, 1)[0]);
+            }
+            return batch;
+        }
+
+        function updateQueueSize() {
+            const selectedSize = Number(queueSizeSelect.value);
+            queueSize = [3, 4, 5].includes(selectedSize) ? selectedSize : 3;
+            queueSizeSelect.value = String(queueSize);
+            // 同一批 n 顆顏色不同；調整數量時保留預覽前方的球。
+            ballQueue = createColorBatch(queueSize, ballQueue.slice(0, queueSize));
+            updatePreview();
+            moveHint.textContent = `先選球，再點可到達的空格；每次移動後隨機新增 ${queueSize} 顆球`;
+        }
+
+        function updatePreview() {
+            ballQueuePreview.innerHTML = '';
+            ballQueue.forEach((color, index) => {
+                const item = document.createElement('li');
+                item.className = 'ball-queue-item';
+                item.setAttribute('aria-label', `第 ${index + 1} 個：${COLOR_NAMES[color]}`);
+
+                const ball = document.createElement('div');
+                ball.className = `ball-preview-circle color-${color}`;
+                ball.setAttribute('aria-hidden', 'true');
+
+                const position = document.createElement('span');
+                position.className = 'queue-position';
+                position.textContent = String(index + 1);
+                position.setAttribute('aria-hidden', 'true');
+
+                item.appendChild(ball);
+                item.appendChild(position);
+                ballQueuePreview.appendChild(item);
+            });
+        }
+
+        function spawnBalls(colors) {
+            const emptyCells = [];
+            for (let r = 0; r < boardSize; r++) {
+                for (let c = 0; c < boardSize; c++) {
+                    if (board[r][c] === null) emptyCells.push({r, c});
+                }
+            }
+            const spawned = new Set();
+            // 不重複抽取空格；空格不足時先填滿，再進行連線消除檢查。
+            for (let i = 0; i < colors.length && emptyCells.length > 0; i++) {
+                const index = Math.floor(Math.random() * emptyCells.length);
+                const {r, c} = emptyCells.splice(index, 1)[0];
+                board[r][c] = colors[i];
+                spawned.add(`${r},${c}`);
+            }
+            return spawned;
+        }
+
+        function renderBoard(newCells = new Set()) {
+            boardElement.style.gridTemplateColumns = `repeat(${boardSize}, 1fr)`;
+            boardElement.style.gridTemplateRows = `repeat(${boardSize}, 1fr)`;
+            boardElement.innerHTML = '';
+            
+            const cellSize = boardSize === 10 ? '36px' : (boardSize === 9 ? '40px' : '46px');
+
+            for (let r = 0; r < boardSize; r++) {
+                for (let c = 0; c < boardSize; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.style.width = cellSize;
+                    cell.style.height = cellSize;
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    cell.setAttribute('role', 'button');
+                    cell.tabIndex = 0;
+                    const isSelected = selectedBall?.r === r && selectedBall?.c === c;
+                    cell.classList.toggle('selected', isSelected);
+                    cell.setAttribute('aria-pressed', String(isSelected));
+                    cell.setAttribute('aria-label', `第 ${r + 1} 列第 ${c + 1} 格，${board[r][c] === null ? '空格' : COLOR_NAMES[board[r][c]] + '球'}`);
+
+                    if (board[r][c] !== null) {
+                        const ball = document.createElement('div');
+                        ball.className = `ball color-${board[r][c]}`;
+                        if (newCells.has(`${r},${c}`)) ball.classList.add('new-ball');
+                        cell.appendChild(ball);
+                    } else {
+                        cell.classList.add('active-hover');
+                    }
+                    cell.addEventListener('click', () => handleCellClick(r, c));
+                    cell.addEventListener('keydown', event => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            handleCellClick(r, c);
+                        }
+                    });
+                    boardElement.appendChild(cell);
+                }
+            }
+        }
+
+        async function handleCellClick(r, c) {
+            if (isGameOver || isProcessing) return;
+            if (board[r][c] !== null) {
+                selectedBall = selectedBall?.r === r && selectedBall?.c === c ? null : {r, c};
+                moveHint.textContent = selectedBall
+                    ? '已選取球，請點擊可到達的空格；再次點選可取消'
+                    : '先選擇一顆球，再點擊可到達的空格';
+                renderBoard();
+                return;
+            }
+            if (!selectedBall) {
+                moveHint.textContent = '請先選擇棋盤上的一顆球';
+                return;
+            }
+
+            const source = {...selectedBall};
+            const path = findShortestPath(source, {r, c});
+            if (!path) {
+                moveHint.textContent = '無法到達：路徑被球擋住了，請選擇其他空格';
+                return;
+            }
+
+            const version = gameVersion;
+            const color = board[source.r][source.c];
+            isProcessing = true;
+            queueSizeSelect.disabled = true;
+            comboBadge.style.display = 'none';
+            moveHint.textContent = '球正在沿最短路徑移動…';
+            try {
+                await animateBallMove(path, color);
+                if (version !== gameVersion) return;
+
+                board[source.r][source.c] = null;
+                board[r][c] = color;
+                selectedBall = null;
+
+                // 每次有效移動都新增完整預覽批次，之後才統一消除。
+                const spawned = spawnBalls(ballQueue);
+                ballQueue = createColorBatch(queueSize);
+                updatePreview();
+                renderBoard(spawned);
+                await waitForAnimation(200);
+                if (version !== gameVersion) return;
+
+                const result = findCompletedLines();
+                if (result.lineCount > 0) {
+                    result.cells.forEach(key => {
+                        const [row, col] = key.split(',').map(Number);
+                        getCellElement(row, col).querySelector('.ball').classList.add('clearing');
+                    });
+                    await waitForAnimation(240);
+                    if (version !== gameVersion) return;
+                    result.cells.forEach(key => {
+                        const [row, col] = key.split(',').map(Number);
+                        board[row][col] = null;
+                    });
+                    const earned = result.cells.size * result.lineCount;
+                    score += earned;
+                    updateScoreUI();
+                    if (result.lineCount > 1) {
+                        comboBadge.textContent = `COMBO x${result.lineCount}!`;
+                        comboBadge.style.display = 'block';
+                    }
+                    moveHint.textContent = `消除 ${result.cells.size} 顆 × ${result.lineCount} 條連線，獲得 ${earned} 分`;
+                    renderBoard();
+                } else {
+                    moveHint.textContent = `已新增 ${spawned.size} 顆球；請選球繼續移動`;
+                }
+                updateTowers();
+                // 補球後即使暫時填滿，仍讓同回合消除騰出空格。
+                if (isBoardFull()) triggerGameOver();
+            } catch (err) {
+                if (version === gameVersion) {
+                    console.error('Error during ball move:', err);
+                    moveHint.textContent = '移動未完成，請重新選球';
+                    selectedBall = null;
+                    renderBoard();
+                }
+            } finally {
+                if (version === gameVersion) {
+                    isProcessing = false;
+                    queueSizeSelect.disabled = false;
+                }
+            }
+        }
+
+        function isInsideBoard(r, c) {
+            return r >= 0 && r < boardSize && c >= 0 && c < boardSize;
+        }
+
+        function findShortestPath(source, target) {
+            if (!isInsideBoard(source.r, source.c) || !isInsideBoard(target.r, target.c)
+                || board[source.r][source.c] === null || board[target.r][target.c] !== null) return null;
+
+            // BFS 只走上下左右的空格，第一次找到目的地即為最短路徑。
+            const parents = Array.from({length: boardSize}, () => Array(boardSize).fill(null));
+            const queue = [source];
+            parents[source.r][source.c] = source;
+            for (let head = 0; head < queue.length; head++) {
+                const current = queue[head];
+                if (current.r === target.r && current.c === target.c) {
+                    const path = [];
+                    let step = current;
+                    while (step.r !== source.r || step.c !== source.c) {
+                        path.push(step);
+                        step = parents[step.r][step.c];
+                    }
+                    path.push(source);
+                    return path.reverse();
+                }
+                for (const [dr, dc] of MOVE_DIRECTIONS) {
+                    const r = current.r + dr;
+                    const c = current.c + dc;
+                    if (!isInsideBoard(r, c) || board[r][c] !== null || parents[r][c] !== null) continue;
+                    parents[r][c] = current;
+                    queue.push({r, c});
+                }
+            }
+            return null;
+        }
+
+        function getCellElement(r, c) {
+            return boardElement.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+        }
+
+        function waitForAnimation(milliseconds) {
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return Promise.resolve();
+            return new Promise(resolve => setTimeout(resolve, milliseconds));
+        }
+
+        async function animateBallMove(path, color) {
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            const source = getCellElement(path[0].r, path[0].c);
+            source.classList.remove('selected');
+            const sourceBall = source.querySelector('.ball');
+            const ballRect = sourceBall.getBoundingClientRect();
+            const boardRect = boardElement.getBoundingClientRect();
+            const sourceRect = source.getBoundingClientRect();
+            const movingBall = document.createElement('div');
+            movingBall.className = `ball moving-ball color-${color}`;
+            movingBall.setAttribute('aria-hidden', 'true');
+            movingBall.style.width = `${ballRect.width}px`;
+            movingBall.style.height = `${ballRect.height}px`;
+            movingBall.style.left = `${ballRect.left - boardRect.left - boardElement.clientLeft + boardElement.scrollLeft}px`;
+            movingBall.style.top = `${ballRect.top - boardRect.top - boardElement.clientTop + boardElement.scrollTop}px`;
+            boardElement.appendChild(movingBall);
+            sourceBall.style.visibility = 'hidden';
+
+            const keyframes = [{offset: 0, transform: 'translate(0px, 0px) scale(1, 1)', borderRadius: '50%'}];
+            const steps = path.length - 1;
+            let previousX = 0;
+            let previousY = 0;
+            for (let i = 1; i < path.length; i++) {
+                const rect = getCellElement(path[i].r, path[i].c).getBoundingClientRect();
+                const x = rect.left - sourceRect.left;
+                const y = rect.top - sourceRect.top;
+                const horizontal = path[i].c !== path[i - 1].c;
+                // 每格拉長、擠壓再回彈，沿途轉彎也遵守可通行路徑。
+                keyframes.push({
+                    offset: (i - 0.5) / steps,
+                    transform: `translate(${(previousX + x) / 2}px, ${(previousY + y) / 2}px) scale(${horizontal ? '1.3, 0.76' : '0.76, 1.3'})`,
+                    borderRadius: horizontal ? '44% 56% 56% 44%' : '56% 56% 44% 44%'
+                });
+                keyframes.push({
+                    offset: i / steps,
+                    transform: `translate(${x}px, ${y}px) scale(1, 1)`,
+                    borderRadius: '50%'
+                });
+                previousX = x;
+                previousY = y;
+            }
+            let animation;
+            try {
+                animation = movingBall.animate(keyframes, {
+                    duration: Math.min(3600, Math.max(180, steps * 110)),
+                    easing: 'ease-in-out',
+                    fill: 'forwards'
+                });
+                activeMoveAnimation = animation;
+                await animation.finished;
+            } finally {
+                if (activeMoveAnimation === animation) activeMoveAnimation = null;
+                sourceBall.style.visibility = '';
+                movingBall.remove();
+            }
+        }
+
+        function findCompletedLines() {
+            const cells = new Set();
+            let lineCount = 0;
+            for (let r = 0; r < boardSize; r++) {
+                for (let c = 0; c < boardSize; c++) {
+                    const color = board[r][c];
+                    if (color === null) continue;
+                    for (const [dr, dc] of LINE_DIRECTIONS) {
+                        const previousR = r - dr;
+                        const previousC = c - dc;
+                        // 只從連線起點數一次；六顆以上也算一條完整連線。
+                        if (isInsideBoard(previousR, previousC) && board[previousR][previousC] === color) continue;
+                        const run = [];
+                        let row = r;
+                        let col = c;
+                        while (isInsideBoard(row, col) && board[row][col] === color) {
+                            run.push(`${row},${col}`);
+                            row += dr;
+                            col += dc;
+                        }
+                        if (run.length >= WIN_COUNT) {
+                            lineCount++;
+                            run.forEach(key => cells.add(key));
+                        }
+                    }
+                }
+            }
+            // 交叉點只消除、計分一次；Combo 倍率為同次完成的連線數。
+            return {cells, lineCount};
+        }
+
+        function isBoardFull() {
+            for (let r = 0; r < boardSize; r++) {
+                for (let c = 0; c < boardSize; c++) {
+                    if (board[r][c] === null) return false;
+                }
+            }
+            return true;
+        }
+
+        function updateScoreUI() {
+            currentScoreElement.textContent = score;
+            currentScoreDisplay.textContent = score;
+            if (score > highScore) {
+                highScore = score;
+                try {
+                    localStorage.setItem('dot_crown_highscore', highScore.toString());
+                } catch(e) {}
+                highScoreDisplay.textContent = highScore;
+            }
+        }
+
+        function updateTowers() {
+            const maxTarget = Math.max(highScore, 500, score * 1.2);
+            const playerHeightPct = Math.min(100, (score / maxTarget) * 100);
+            const kingHeightPct = Math.min(100, (highScore / maxTarget) * 100);
+
+            playerTowerFill.style.height = `${playerHeightPct}%`;
+            kingTowerFill.style.height = `${kingHeightPct}%`;
+
+            const maxPixel = 250; 
+            const playerPixel = Math.min(maxPixel, (playerHeightPct / 100) * maxPixel);
+            const kingPixel = Math.min(maxPixel, (kingHeightPct / 100) * maxPixel);
+
+            playerAvatar.style.bottom = `${playerPixel + 5}px`;
+            kingAvatar.style.bottom = `${kingPixel + 5}px`;
+
+            if (score > startingHighScore && score > 0) {
+                playerAvatar.textContent = '👑';
+                kingAvatar.textContent = '🤴';
+                kingStatusText.textContent = '🔥 你已登上國王寶座！';
+                kingStatusText.style.color = '#ffd700';
+            } else {
+                playerAvatar.textContent = '🧘';
+                kingAvatar.textContent = '👑';
+                kingStatusText.textContent = '超越國王即登基！';
+                kingStatusText.style.color = '#a0a0a0';
+            }
+        }
+
+        function triggerGameOver() {
+            isGameOver = true;
+            moveHint.textContent = '棋盤已滿，遊戲結束';
+            if (score > startingHighScore) {
+                modalTitle.textContent = "🏆 恭迎新國王！";
+                modalMessage.textContent = `太神啦！你以 ${score} 分刷新了最高紀錄！`;
+            } else {
+                modalTitle.textContent = "遊戲結束";
+                modalMessage.textContent = `棋盤已滿！最終得分：${score} 分`;
+            }
+            gameOverModal.classList.add('show');
+        }
+
+        restartBtn.addEventListener('click', initGame);
+        modalRestartBtn.addEventListener('click', initGame);
+        boardSizeSelect.addEventListener('change', initGame);
+        queueSizeSelect.addEventListener('change', updateQueueSize);
+
+        // 啟動
+        initGame();
+    </script>
+</body>
+</html>
