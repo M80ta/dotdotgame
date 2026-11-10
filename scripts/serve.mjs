@@ -4,7 +4,7 @@ import path from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
-const mimeTypes = {'.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.md': 'text/plain; charset=utf-8'};
+const mimeTypes = {'.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.md': 'text/plain; charset=utf-8'};
 
 export function createStaticServer(root = projectRoot) {
     const resolvedRoot = path.resolve(root);
@@ -17,7 +17,7 @@ export function createStaticServer(root = projectRoot) {
             const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
             const entry = pathname === '/' ? 'index.html' : pathname.slice(1);
             const allowed = ['index.html', 'dot_and_crown_fixed.html', 'LICENSE.md', 'README.md', '.nojekyll'].includes(entry)
-                || entry.startsWith('src/') || entry.startsWith('styles/');
+                || entry.startsWith('src/') || entry.startsWith('styles/') || entry.startsWith('assets/');
             const target = path.resolve(resolvedRoot, entry);
             const relative = path.relative(resolvedRoot, target);
             if (!allowed || relative.startsWith('..') || path.isAbsolute(relative) || entry.split(/[\\/]/).some(part => part.startsWith('.') && part !== '.nojekyll')) {

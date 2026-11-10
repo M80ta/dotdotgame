@@ -1,0 +1,10 @@
+<!-- Required Notice: Copyright (c) 2026 M80ta
+     License: https://polyformproject.org/licenses/noncommercial/1.0.0 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <rect width="64" height="64" rx="14" fill="#1a1a2e"/>
+    <path d="M12 20 23 30 32 15 41 30 52 20 47 46H17Z" fill="#ffd700"/>
+    <rect x="17" y="49" width="30" height="5" rx="2" fill="#d97706"/>
+    <circle cx="23" cy="38" r="4" fill="#f87171"/>
+    <circle cx="32" cy="38" r="4" fill="#60a5fa"/>
+    <circle cx="41" cy="38" r="4" fill="#4ade80"/>
+</svg>

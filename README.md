@@ -41,6 +41,7 @@ python -m http.server 4173 --bind 127.0.0.1
 ```text
 index.html                       網頁結構與無障礙標記
 dot_and_crown_fixed.html          舊入口轉址
+assets/favicon.svg               網站圖示
 src/
   main.js                        建立並組合各模組，啟動遊戲
   config.js                      尺寸、n、連線門檻、方向、儲存鍵值
@@ -108,6 +109,18 @@ flowchart TD
 - 遵循 `prefers-reduced-motion`，降低動態效果時跳過跳動與移動動畫。
 - 目標為支援 ES Modules、CSS Grid、`aspect-ratio` 與 Web Animations API 的現代 Chrome、Edge、Safari、Firefox。
 
+### 本次瀏覽器驗證
+
+使用 Windows Chrome 的 Responsive 裝置模擬檢查已部署的線上版本：
+
+| 模擬視窗 | 驗證內容 |
+| --- | --- |
+| 320 × 900 | 手機直向、8 × 8／10 × 10 棋盤、3／5 顆預覽、設定自動換行 |
+| 768 × 1024 | 平板直向、上方雙側欄與置中棋盤、10 × 10／5 顆預覽 |
+| 1366 × 768 | 筆電、左右側欄與中央棋盤、10 × 10／5 顆預覽、直向捲動 |
+
+上述版面未見橫向溢出；線上版本也已實際操作選球、移動及整批補球。這是 Chrome 裝置模擬驗證，尚未逐一使用實體 iPhone／iPad 或 Safari／Firefox 驗證。
+
 ## 測試與建置
 
 ```powershell
@@ -118,7 +131,7 @@ node scripts/serve.mjs --dir dist --port 4174
 
 測試涵蓋設定組合、最短路徑與阻擋、整批補球、四方向消除、長連線、交叉 Combo、滿盤、動畫中重新開始、UI／鍵盤、儲存失敗，以及 ES Modules 相對路徑與 HTTP MIME。DOM 整合測試使用輕量替身；不等同各實體裝置的瀏覽器測試。
 
-`dist/` 只包含遊戲入口、`src/`、`styles/`、舊入口與說明／授權，不會上傳 `.git/`、測試、開發快取或環境檔。`dist/` 是自動產物，不提交到 Git。
+`dist/` 只包含遊戲入口、`src/`、`styles/`、`assets/`、舊入口與說明／授權，不會上傳 `.git/`、測試、開發快取或環境檔。`dist/` 是自動產物，不提交到 Git。
 
 ## GitHub Pages
 
