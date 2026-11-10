@@ -1,4 +1,6 @@
-# 點陣方圓大對決（Dot & Crown）
+# 妮妮的豆豆大戰
+
+<img src="./assets/doudou-icon-180.png" alt="妮妮的豆豆大戰：綠、紅、藍三顆微笑豆豆" width="96" height="96">
 
 以原生 JavaScript ES Modules、HTML、CSS 製作的五連線策略遊戲。UI、棋盤資料、球元素、遊戲規則與動畫分開管理，沒有執行期套件或後端服務。
 
@@ -41,7 +43,11 @@ python -m http.server 4173 --bind 127.0.0.1
 ```text
 index.html                       網頁結構與無障礙標記
 dot_and_crown_fixed.html          舊入口轉址
-assets/favicon.svg               網站圖示
+assets/
+  doudou-icon.png                 豆豆圖示生成原圖
+  doudou-icon-{32,180,512}.png     分頁、手機主畫面與分享用圖示
+  doudou.ico                      多尺寸瀏覽器分頁圖示
+  README.md                       圖示用途、生成方式與提示詞
 src/
   main.js                        建立並組合各模組，啟動遊戲
   config.js                      尺寸、n、連線門檻、方向、儲存鍵值

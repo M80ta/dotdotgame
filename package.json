@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Dot & Crown：可於手機、平板與電腦遊玩的連線消除遊戲",
+  "description": "妮妮的豆豆大戰：可於手機、平板與電腦遊玩的連線消除遊戲",
   "license": "SEE LICENSE IN LICENSE.md",
   "engines": { "node": ">=20" },
   "scripts": {

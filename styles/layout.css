@@ -1,4 +1,23 @@
 /* Page composition only. Device adaptations live in responsive.css. */
+.brand-heading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(8px, 2vw, 12px);
+    margin-bottom: 5px;
+}
+
+.brand-heading h1 {
+    margin-bottom: 0;
+}
+
+.brand-icon {
+    width: clamp(40px, 7vw, 56px);
+    height: auto;
+    flex-shrink: 0;
+    border-radius: 24%;
+}
+
 .game-switcher {
     align-self: flex-end;
     display: flex;
