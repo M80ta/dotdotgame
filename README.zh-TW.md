@@ -60,7 +60,7 @@ python -m http.server 4173 --bind 127.0.0.1
 
 斷線時將成績保留於有容量上限的待送佇列，重試沿用相同 UUID 避免重複。恢復連線、回到頁面、開啟／重整排行及前景定時重試都會嘗試同步；成功後更新該局名次。瀏覽器無法儲存時不會宣稱已安全保留。
 
-**連線狀態：**公開連線設定目前仍為空值，介面與 SQL 已備妥，需連接 Supabase 專案才能正式啟用全球排行。詳見[後端設定](https://github.com/M80ta/dotdotgame/blob/main/supabase/README.md)。尚未連接時會明確提示，不會將本機分數當成全球排行。
+**連線狀態：**Supabase 共享後端已連接。網站使用 publishable key，只開放兩個排行榜 RPC，匿名玩家無法直接存取資料表。未來若部署未設定後端，介面仍會明確提示，不會將本機分數當成全球排行。詳見[後端設定](https://github.com/M80ta/dotdotgame/blob/main/supabase/README.md)。
 
 GitHub 儲存遊戲與後端設定程式；[GitHub Pages 是靜態託管](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages)，提交資料存於 Supabase。[Supabase Free](https://supabase.com/pricing)目前提供 500 MB 資料庫，閒置一週可能暫停。本榜採娛樂用途，會驗證格式，未實作玩家身分與伺服器重播驗分。
 
@@ -214,7 +214,7 @@ node scripts/serve.mjs --dir dist --port 4174
 
 `dist/` 只包含遊戲入口、`src/`、`styles/`、`assets/`、舊入口與說明／授權，不會上傳 `.git/`、測試、開發快取或環境檔。`dist/` 是自動產物，不提交到 Git。
 
-另驗證共享國王、同分排行、玩家內容以純文字呈現、離線重送、儲存失敗、逾時、舊局回應與語言切換。Worker 生命週期測試包含離線載入、雜湊錯誤拒收、保留舊版、網站範圍隔離及排行榜 API 不快取。這些是自動化 API／DOM／生命週期測試，實際瀏覽器離線行為與雲端 SQL 仍需在後端連接後驗證。
+另驗證共享國王、同分排行、玩家內容以純文字呈現、離線重送、儲存失敗、逾時、舊局回應與語言切換。Worker 生命週期測試包含離線載入、雜湊錯誤拒收、保留舊版、網站範圍隔離及排行榜 API 不快取。雲端 SQL 已以匿名角色驗證送分、防重複、同分排名與資料表禁止直接存取；測試交易已回滾，沒有留下測試成績。實際瀏覽器離線行為仍需裝置驗證。
 
 ## GitHub Pages
 

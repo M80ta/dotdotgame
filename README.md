@@ -61,7 +61,7 @@ The **Reigning King** comes from the highest published shared score and that pla
 
 Offline submissions wait in a bounded outbox and reuse the same UUID on retry. Reconnection, returning to the page, opening/refreshing rankings, and a visible-page retry timer attempt delivery. A successful retry updates that game's rank. Storage failure is not presented as a safely retained result.
 
-**Connection status:** the public connection configuration is currently empty. The interface and SQL migration are ready, but a Supabase project must be connected before global rankings become live. See [backend setup](https://github.com/M80ta/dotdotgame/blob/main/supabase/README.md). The interface reports an unconnected leaderboard rather than inventing global rankings from local data.
+**Connection status:** the shared Supabase backend is connected. The website uses a publishable key and only the two leaderboard RPCs; anonymous players cannot directly access the table. If a future deployment is configured without a backend, the interface reports that state rather than inventing global rankings from local data. See [backend setup](https://github.com/M80ta/dotdotgame/blob/main/supabase/README.md).
 
 GitHub stores the game and backend setup code. [GitHub Pages is static hosting](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages); submitted records live in Supabase. [Supabase Free](https://supabase.com/pricing) currently provides a 500 MB database and can pause after a week of inactivity. This recreational leaderboard validates payloads but does not authenticate players or verify game replays on a server.
 
@@ -218,7 +218,7 @@ Audio tests additionally cover gesture-based startup, sound timing, stopping old
 
 `dist/` contains only the game entries, `src/`, `styles/`, `assets/`, both READMEs, and the license. Git data, tests, development caches, and environment files are excluded. Build output is ignored by Git.
 
-Additional tests cover shared king scores, tied ranks, text-only player content, offline outbox retries, failed storage, request/body timeouts, stale games, and language changes. Worker lifecycle tests cover offline navigation/modules, hash mismatch rejection, keeping old releases, scope isolation, and API bypass. These are automated API/DOM/lifecycle tests; actual browser offline behavior and the hosted SQL migration still need verification after the backend is connected.
+Additional tests cover shared king scores, tied ranks, text-only player content, offline outbox retries, failed storage, request/body timeouts, stale games, and language changes. Worker lifecycle tests cover offline navigation/modules, hash mismatch rejection, keeping old releases, scope isolation, and API bypass. The hosted database has also passed anonymous-role submission, idempotency, tied-ranking, and direct-table-access checks using a rolled-back transaction, leaving no test scores. Actual browser offline behavior still needs device verification.
 
 ## GitHub Pages
 

@@ -2,6 +2,8 @@
 
 The game remains hosted on GitHub Pages. Supabase stores the public leaderboard; GitHub Pages itself does not run a writable database.
 
+The current game is connected to its shared backend. The following steps document how to reproduce the setup in another project. Only the publishable key is included in the public website.
+
 1. Create a project under **Supabase Free**, or choose an existing free project dedicated to this game. Do not upgrade or enable paid add-ons for this setup.
 2. Run [`migrations/202611110001_leaderboard.sql`](./migrations/202611110001_leaderboard.sql) in the project's SQL editor, or apply it using the connected Supabase integration.
 3. Find the project URL and **publishable** API key in the Supabase dashboard. A legacy `anon` key is also supported. Never use a secret key, database password, or `service_role` key in this website.
@@ -17,6 +19,10 @@ The game remains hosted on GitHub Pages. Supabase stores the public leaderboard;
 5. Run `npm test` and `npm run build`, then push to GitHub. Verify the live game can read the empty shared leaderboard and submit a completed game from two browsers.
 
 Until the project is connected, the website explicitly says the shared leaderboard is not connected. It does not display device-local results as global rankings. Submitted results can wait in the device's outbox and upload after setup. Scores need an internet connection to become public.
+
+## Hosted verification
+
+The migration was executed in the Supabase SQL editor. [`tests/leaderboard.sql`](./tests/leaderboard.sql) verifies anonymous submission, idempotent retry, score ordering, shared ranks, and denied direct table access. It is a bootstrap check requiring an empty leaderboard; its test rows are rolled back rather than published. The current backend passed these checks. Do not run the bootstrap check after genuine scores have been submitted.
 
 ## API and access
 
