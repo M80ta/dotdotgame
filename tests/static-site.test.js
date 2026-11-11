@@ -6,6 +6,7 @@ import {createStaticServer} from '../scripts/serve.mjs';
 test('HTML assets and every ES module import resolve with relative project-site paths', async () => {
     const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
     const entries = [...html.matchAll(/(?:href|src)="(\.\/[^"#]+)"/g)].map(match => new URL('../' + match[1], import.meta.url));
+    entries.push(new URL('../src/main.js', import.meta.url));
     const visited = new Set();
     async function visit(url) {
         if (visited.has(url.href)) return;

@@ -7,8 +7,8 @@ import {findSuggestedMove} from './hints.js';
 
 /** Coordinates model, UI, persistence and async animation; no board algorithms. */
 export class GameController {
-    constructor({ui, boardView, animator, store, sessionStore, audio = null, random = Math.random, onError = console.error}) {
-        Object.assign(this, {ui, boardView, animator, store, sessionStore, audio, random, onError});
+    constructor({ui, boardView, animator, store, sessionStore, audio = null, rankings = null, random = Math.random, onError = console.error}) {
+        Object.assign(this, {ui, boardView, animator, store, sessionStore, audio, rankings, random, onError});
         this.i18n = ui.i18n;
         this.version = 0;
         this.processing = false;
@@ -50,6 +50,7 @@ export class GameController {
         this.message = this.i18n.t(`hint.${this.status.code}`, this.status.params);
         this.lastSaveSucceeded = true;
         this.processing = false;
+        this.rankings?.onGameStart();
         this.updateHighScore();
         this.ui.setSettings({boardSize: game.board.size, batchSize: game.batchSize});
         this.renderGame(newCells);
@@ -60,12 +61,21 @@ export class GameController {
         const game = this.game;
         this.ui.setProcessing(this.processing);
         this.ui.renderPreview(game.preview);
-        this.ui.renderScores(game.score, this.highScore, this.startingHighScore);
+        this.renderScorePanels();
         this.ui.setCombo(this.combo);
         this.renderHint();
         this.boardView.render(game.board, game.selectedBall, newCells);
-        if (game.isOver) this.ui.showGameOver(game.score, this.startingHighScore);
+        if (game.isOver) {
+            this.ui.showGameOver(game.score, this.rankings ? this.rankings.topScore : this.startingHighScore,
+                !this.rankings, !this.rankings || this.rankings.known);
+            this.rankings?.onGameOver(game);
+        }
         else this.ui.hideGameOver();
+    }
+
+    renderScorePanels() {
+        this.ui.renderScores(this.game.score, this.rankings ? this.rankings.topScore : this.highScore,
+            this.rankings ? this.rankings.topScore : this.startingHighScore, !this.rankings || this.rankings.known);
     }
 
     setStatus(code, params = {}) {
@@ -82,6 +92,7 @@ export class GameController {
     changeLanguage(language) {
         if (!this.i18n.setLanguage(language)) return;
         this.ui.localize();
+        this.rankings?.localize();
         this.boardView.localize();
         this.message = this.i18n.t(`hint.${this.status.code}`, this.status.params);
         this.renderHint();

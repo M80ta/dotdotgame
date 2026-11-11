@@ -1,4 +1,5 @@
-import {cp, mkdir, rm} from 'node:fs/promises';
+import {cp, mkdir, rm, readFile} from 'node:fs/promises';
+import {buildOffline} from './offline-build.mjs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
@@ -13,4 +14,6 @@ await mkdir(output, {recursive: true});
 for (const entry of ['index.html', 'dot_and_crown_fixed.html', '.nojekyll', 'src', 'styles', 'assets', 'LICENSE.md', 'README.md', 'README.zh-TW.md']) {
     await cp(path.join(root, entry), path.join(output, entry), {recursive: true});
 }
+const {version} = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
+await buildOffline(output, version);
 console.log('Static site built in dist/');

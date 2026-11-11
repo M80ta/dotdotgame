@@ -35,7 +35,7 @@ export function createAudioSpy() {
     };
 }
 
-export function createApp({size = 8, batch = 3, reducedMotion = true, deferAnimation = false, deferWait = false, storage = createMemoryStorage(), language = 'zh-TW', audio = createAudioSpy()} = {}) {
+export function createApp({size = 8, batch = 3, reducedMotion = true, deferAnimation = false, deferWait = false, storage = createMemoryStorage(), language = 'zh-TW', audio = createAudioSpy(), rankingsFactory} = {}) {
     const animations = [];
     const waits = [];
     const errors = [];
@@ -129,16 +129,18 @@ export function createApp({size = 8, batch = 3, reducedMotion = true, deferAnima
         setTimeout: callback => deferWait ? waits.push(callback) : queueMicrotask(callback)
     };
     const animator = new BallAnimator(view, window);
+    const rankings = rankingsFactory?.({document, i18n});
     const controller = new GameController({
-        ui, boardView: view, animator, audio,
+        ui, boardView: view, animator, audio, rankings,
         store: new HighScoreStore(() => storage),
         sessionStore: new GameSessionStore(() => storage),
         random: () => randomValues.length ? randomValues.shift() : 0.37,
         onError: error => errors.push(error)
     });
+    rankings?.attach(controller);
     controller.start();
     return {
-        controller, ui, view, animator, document, elements, animations, waits, errors, storage, i18n, audio,
+        controller, ui, view, animator, document, elements, animations, waits, errors, storage, i18n, audio, rankings,
         setRandom: values => { randomValues = values.slice(); },
         click: (r, c) => view.getCell(r, c).listeners.click(),
         emptyBoard() {

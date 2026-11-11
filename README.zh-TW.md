@@ -4,7 +4,7 @@
 
 <img src="./assets/doudou-icon-180.png" alt="妮妮的豆豆大戰：綠、紅、藍三顆微笑豆豆" width="96" height="96">
 
-以原生 JavaScript ES Modules、HTML、CSS 製作的五連線策略遊戲。UI、棋盤資料、球元素、遊戲規則與動畫分開管理，沒有執行期套件或後端服務。
+以原生 JavaScript ES Modules、HTML、CSS 製作的五連線策略遊戲。UI、棋盤資料、球元素、規則、動畫與儲存分開管理。單機遊玩不需要執行期套件或後端；共享排行榜使用 Supabase。
 
 - 線上入口：<https://m80ta.github.io/dotdotgame/>
 - 原始碼：<https://github.com/M80ta/dotdotgame>
@@ -44,6 +44,26 @@ python -m http.server 4173 --bind 127.0.0.1
 
 請透過 HTTP 開啟 `index.html`。ES Modules 需要正確的來源與 JavaScript MIME，直接雙擊 HTML 的 `file://` 開啟方式不適用。舊入口 `dot_and_crown_fixed.html` 會轉到 `index.html`。
 
+## 網路不穩與離線遊玩
+
+成功開啟並完成離線下載後，之後即使沒有網路，也能從快取開啟遊戲並恢復裝置存檔。Service Worker 將 HTML、JavaScript 與 CSS 作為完整版本快取，逐檔驗證 SHA-256；新版下載不完整或混雜時保留舊的可用版本。圖示／音效的選用下載失敗不會阻止核心快取；正式建置也會加上版本資源網址，避免新頁面混用舊程式。
+
+第一次造訪仍需要網路，沒有下載過的檔案無法離線恢復。腳本或樣式載入失敗時保留載入／重試畫面，恢復連線後重試啟動。清除網站資料、儲存限制或瀏覽器回收快取會影響離線能力。
+
+`npm start` 使用不套用離線快取的開發原始檔。測試離線版請執行 `npm run build`，再以 `node scripts/serve.mjs --dir dist --port 4174` 開啟。需 HTTPS 或支援的 localhost；新版快取啟用時會重新載入，完整回合與選取狀態已同步存檔。
+
+## 共享排行榜
+
+右上角「排行榜」開啟漂浮玻璃視窗，列出前 50 名的名稱、分數、留言與名次，同分並列。每次結束可填寫 1–24 字玩家名稱與 160 字內選填單行留言，送出成績並查看排名。名稱會記住，留言每局重設。
+
+歷史國王以共享排行榜已公開最高分與玩家名稱為準，本機得分不會直接覆蓋國王。尚未下載共享榜時顯示未知，斷線則明確顯示上次取得的共享資料。舊有本機最高分不會自動公開。
+
+斷線時將成績保留於有容量上限的待送佇列，重試沿用相同 UUID 避免重複。恢復連線、回到頁面、開啟／重整排行及前景定時重試都會嘗試同步；成功後更新該局名次。瀏覽器無法儲存時不會宣稱已安全保留。
+
+**連線狀態：**公開連線設定目前仍為空值，介面與 SQL 已備妥，需連接 Supabase 專案才能正式啟用全球排行。詳見[後端設定](https://github.com/M80ta/dotdotgame/blob/main/supabase/README.md)。尚未連接時會明確提示，不會將本機分數當成全球排行。
+
+GitHub 儲存遊戲與後端設定程式；[GitHub Pages 是靜態託管](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages)，提交資料存於 Supabase。[Supabase Free](https://supabase.com/pricing)目前提供 500 MB 資料庫，閒置一週可能暫停。本榜採娛樂用途，會驗證格式，未實作玩家身分與伺服器重播驗分。
+
 ## 遊戲 A 規則
 
 1. 棋盤可選擇 8 × 8、9 × 9、10 × 10。
@@ -65,7 +85,7 @@ python -m http.server 4173 --bind 127.0.0.1
 - 每次選取／取消選取，以及每個有效移動都會同步存檔，不依賴關閉分頁事件。
 - 有效移動先完成邏輯上的移動、亂數補球、消除與計分，再原子寫入完整回合結果；動畫僅呈現過程。在動畫中重新整理會恢復該回合完成後的棋盤，不會重複補球或重新抽色。
 - 按重來或變更任一設定會移除舊局，並立即存下新局。遊戲失敗則移除該局進度，重新整理會開新局。
-- 最高分使用獨立紀錄，重來或失敗都不會清除最高分。
+- 舊有個人最高分仍以獨立紀錄保留，重來或失敗不會清除，也不會自動公開；畫面上的歷史國王改以共享排行榜最高分為準。
 - 存檔包含版本與資料驗證；格式損壞、尺寸／顏色不合法或已失敗的棋盤不會載入，會正常開新局。
 - 清除瀏覽器網站資料或使用無法保留資料的瀏覽模式，會影響進度保留。儲存被封鎖或寫入失敗時仍可遊玩，畫面會提示目前無法儲存進度。
 
@@ -82,6 +102,7 @@ assets/
   README.md                       圖示用途、生成方式與提示詞
 src/
   main.js                        建立並組合各模組，啟動遊戲
+  bootstrap.js                   載入失敗重試與離線 Worker 註冊
   config.js                      尺寸、n、連線門檻、方向、儲存鍵值
   audio/
     sound-effects.js             溫和拖曳循環與泡泡破裂波形
@@ -94,11 +115,13 @@ src/
     game-a.js                    遊戲 A 狀態與回合規則，無 DOM 相依
     lines.js                     四方向連線偵測、交叉去重與線數計算
     hints.js                     合法候選移動評估，不產生亂數補球
+    rankings-controller.js       排行榜、結束填寫與同步協調
     controller.js                協調回合、動畫、UI 與最高分
     status.js                    跨語言提示代碼與舊存檔相容處理
   ui/
     game-ui.js                   設定、預覽、計分、王座與結束視窗
     ball-animator.js              選定路徑的史萊姆動畫與消除動畫
+    leaderboard-ui.js            玻璃排行視窗與結束成績表單
   i18n/
     messages.js                  繁體中文與英文翻譯字典
     translator.js                語言偏好、文字格式與頁面語系更新
@@ -106,6 +129,8 @@ src/
     game-audio.js                音效播放、取消、靜音偏好與背景處理
     high-score.js                隔離瀏覽器儲存與例外處理
     game-session.js              裝置本機對局存檔、版本及讀寫錯誤處理
+    leaderboard.js               共享榜 REST、快取與離線待送佇列
+    leaderboard-config.js        公開 Supabase 網址與 publishable key
 styles/
   base.css                       色彩、字體、全域基礎樣式與焦點
   layout.css                     頁面、側欄、設定列與主面板配置
@@ -116,6 +141,9 @@ styles/
 scripts/
   serve.mjs                      本機靜態伺服器
   build.mjs                      以允許清單產生 dist/ 靜態網站
+  offline-build.mjs              版本資源網址與完整離線清單
+offline/service-worker.js        完整版本快取及更新處理
+supabase/                        資料庫 SQL 與共享後端設定
 tests/                           規則、UI 整合、非同步競態與靜態資源測試
 .github/workflows/pages.yml       測試、建置、GitHub Pages 部署
 LICENSE.md                       授權全文
@@ -185,6 +213,8 @@ node scripts/serve.mjs --dir dist --port 4174
 音效測試另涵蓋玩家操作後才啟動、播放時機、舊局取消、切到背景、靜音偏好、音訊／儲存失敗、波形範圍及 WAV 格式。Audio API 替身驗證排程與資源清理；實際喇叭音量及各裝置靜音模式仍需在目標裝置聆聽驗證。
 
 `dist/` 只包含遊戲入口、`src/`、`styles/`、`assets/`、舊入口與說明／授權，不會上傳 `.git/`、測試、開發快取或環境檔。`dist/` 是自動產物，不提交到 Git。
+
+另驗證共享國王、同分排行、玩家內容以純文字呈現、離線重送、儲存失敗、逾時、舊局回應與語言切換。Worker 生命週期測試包含離線載入、雜湊錯誤拒收、保留舊版、網站範圍隔離及排行榜 API 不快取。這些是自動化 API／DOM／生命週期測試，實際瀏覽器離線行為與雲端 SQL 仍需在後端連接後驗證。
 
 ## GitHub Pages
 

@@ -43,7 +43,7 @@ button, select, [role='button'] {
     -webkit-tap-highlight-color: transparent;
 }
 
-button:focus-visible, select:focus-visible, [role='button']:focus-visible {
+button:focus-visible, select:focus-visible, input:focus-visible, [role='button']:focus-visible {
     outline: 3px solid var(--accent-gold);
     outline-offset: 2px;
 }

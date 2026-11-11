@@ -4,7 +4,7 @@
 
 <img src="./assets/doudou-icon-180.png" alt="Nini's Bean Battle: three cheerful green, red, and blue beans" width="96" height="96">
 
-A five-in-a-row strategy game built with native JavaScript ES Modules, HTML, and CSS. Move colorful beans around obstacles, complete matching lines, and challenge the reigning king. The UI, board data, bean elements, game rules, animation, and storage are separate modules. No runtime packages or backend are required.
+A five-in-a-row strategy game built with native JavaScript ES Modules, HTML, and CSS. Move colorful beans around obstacles, complete matching lines, and challenge the reigning king. UI, board data, elements, rules, animation, and storage are separate modules. Local play needs no runtime packages or backend; the shared leaderboard uses Supabase.
 
 - **Play:** <https://m80ta.github.io/dotdotgame/>
 - **Short link:** <https://is.gd/QpkZPm>
@@ -45,6 +45,26 @@ python -m http.server 4173 --bind 127.0.0.1
 
 Serve `index.html` over HTTP. ES Modules need a valid origin and JavaScript MIME type; opening the HTML directly with `file://` is not supported. The previous entry, `dot_and_crown_fixed.html`, redirects to `index.html`.
 
+## Slow connections and offline play
+
+After a successful visit and completion of the offline download, the deployed game can reopen and restore the device-local game without a connection. A service worker caches an entire HTML/JavaScript/CSS release, verifies SHA-256 hashes, and preserves the previous working release if an update is incomplete or mixed. Optional icon/audio downloads do not determine whether core caching succeeds. Versioned asset URLs also prevent old browser-cached modules being mixed into a new page.
+
+A first visit still needs a connection: files that have never been downloaded cannot be recovered offline. Loading and retry controls remain visible if the game script or styles fail to load; reconnecting retries failed startup. Storage restrictions, site-data clearing, and browser cache eviction affect offline availability.
+
+`npm start` serves uncached development sources. Test offline support with `npm run build` and `node scripts/serve.mjs --dir dist --port 4174`. It requires HTTPS or a supported localhost origin. Activating an updated release reloads the app; complete turns and selections have already been saved synchronously.
+
+## Shared leaderboard
+
+The top-right **Leaderboard** button opens a floating glass panel listing the top 50 names, scores, comments, and ranks. Tied scores share a rank. Every completed game offers a player name (1–24 characters), optional single-line message (up to 160 characters), submission, and a rankings button. Names are remembered locally; messages reset each game.
+
+The **Reigning King** comes from the highest published shared score and that player's name. Local points do not replace the published king until submitted. Before any shared snapshot has been downloaded, the score is unknown; offline snapshots are identified as cached. Device-local legacy high scores are not automatically published.
+
+Offline submissions wait in a bounded outbox and reuse the same UUID on retry. Reconnection, returning to the page, opening/refreshing rankings, and a visible-page retry timer attempt delivery. A successful retry updates that game's rank. Storage failure is not presented as a safely retained result.
+
+**Connection status:** the public connection configuration is currently empty. The interface and SQL migration are ready, but a Supabase project must be connected before global rankings become live. See [backend setup](https://github.com/M80ta/dotdotgame/blob/main/supabase/README.md). The interface reports an unconnected leaderboard rather than inventing global rankings from local data.
+
+GitHub stores the game and backend setup code. [GitHub Pages is static hosting](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages); submitted records live in Supabase. [Supabase Free](https://supabase.com/pricing) currently provides a 500 MB database and can pause after a week of inactivity. This recreational leaderboard validates payloads but does not authenticate players or verify game replays on a server.
+
 ## Game A rules
 
 1. Choose an **8 × 8**, **9 × 9**, or **10 × 10** board.
@@ -66,7 +86,7 @@ An unfinished game is saved immediately to `localStorage` in the current browser
 - Selection changes and valid moves are saved synchronously; saving does not depend on a tab-close event.
 - Each accepted move computes movement, random placement, clearing, and scoring before atomically saving the complete result. Animations present that result afterward. Refreshing during an animation resumes the completed turn without adding another batch or drawing new colors.
 - Restarting or changing a game setting replaces the previous save with a new game. Losing removes that game's save, so refreshing starts a new game.
-- The high score has a separate record and survives restarts and losses.
+- The older personal high-score record remains separate and survives restarts and losses. It is not automatically published; the visible reigning king comes from the shared leaderboard.
 - Saves are versioned and validated. Invalid dimensions, colors, data formats, and already-full boards are rejected without breaking startup.
 - Status codes and numeric parameters allow the same save to be displayed in either language. Older saves containing Chinese messages are migrated without discarding the game.
 - Clearing browser site data, or using a browsing mode that cannot retain it, affects saved progress. If storage is blocked or a write fails, the game remains playable and displays a message explaining that progress cannot be saved.
@@ -86,6 +106,7 @@ assets/
   README.md                       Icon usage and generation prompt
 src/
   main.js                        Compose the modules and start the app
+  bootstrap.js                   Startup recovery and offline-worker registration
   config.js                      Sizes, line threshold, directions, storage keys
   audio/
     sound-effects.js             Gentle drag-loop and bubble-pop waveforms
@@ -98,6 +119,7 @@ src/
     game-a.js                    Game A state and turn rules, without DOM access
     lines.js                     Four-direction detection and crossing deduplication
     hints.js                     Reachable candidate evaluation without random spawns
+    rankings-controller.js       End-game entry and shared-ranking coordination
     controller.js                Coordinate turns, animation, UI, and persistence
     status.js                    Language-neutral status codes and legacy saves
   i18n/
@@ -106,10 +128,13 @@ src/
   ui/
     game-ui.js                   Settings, preview, scores, towers, dialogs
     ball-animator.js              Slime-like movement and clearing animations
+    leaderboard-ui.js            Glass ranking panel and end-game form
   services/
     game-audio.js                Audio playback, cancellation, mute preference
     high-score.js                High-score storage and error handling
     game-session.js              Versioned device-local game saves
+    leaderboard.js               REST client, global snapshot and offline outbox
+    leaderboard-config.js        Public Supabase URL and publishable key
 styles/
   base.css                       Colors, typography, global styles, focus
   layout.css                     Header controls, sidebars, settings, main panel
@@ -120,6 +145,9 @@ styles/
 scripts/
   serve.mjs                      Local static server
   build.mjs                      Build dist/ using an explicit allowlist
+  offline-build.mjs              Versioned assets and verified cache manifest
+offline/service-worker.js        Complete-release offline caching
+supabase/                        SQL migration and backend setup instructions
 tests/                           Rules, UI, persistence, language, static assets
 .github/workflows/pages.yml       Tests, build, and GitHub Pages deployment
 LICENSE.md                       Full license text
@@ -189,6 +217,8 @@ Tests cover settings, shortest paths, blocked moves, batch spawning, all line di
 Audio tests additionally cover gesture-based startup, sound timing, stopping old turns, backgrounding, mute persistence, failed audio/storage, waveform bounds, and WAV format. Audio API doubles verify scheduling and cleanup; actual speaker loudness and device silent-mode behavior still need listening checks on target devices.
 
 `dist/` contains only the game entries, `src/`, `styles/`, `assets/`, both READMEs, and the license. Git data, tests, development caches, and environment files are excluded. Build output is ignored by Git.
+
+Additional tests cover shared king scores, tied ranks, text-only player content, offline outbox retries, failed storage, request/body timeouts, stale games, and language changes. Worker lifecycle tests cover offline navigation/modules, hash mismatch rejection, keeping old releases, scope isolation, and API bypass. These are automated API/DOM/lifecycle tests; actual browser offline behavior and the hosted SQL migration still need verification after the backend is connected.
 
 ## GitHub Pages
 

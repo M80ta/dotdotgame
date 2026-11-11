@@ -28,10 +28,15 @@ Commercial use outside the permitted purposes requires separate permission.
     <link rel="stylesheet" href="./styles/board.css">
     <link rel="stylesheet" href="./styles/elements.css">
     <link rel="stylesheet" href="./styles/responsive.css">
-    <script type="module" src="./src/main.js"></script>
+    <script defer src="./src/bootstrap.js" data-offline="false"></script>
 </head>
 <body>
+    <div id="startupState" role="status" style="padding:12px;margin:8px;color:#e4e4e4;background:#162447;border-radius:8px;text-align:center">
+        <p id="startupText">豆豆載入中，網路較慢時請稍候。 / Loading beans…</p>
+        <button type="button" onclick="window.location.reload()" style="margin-top:8px;padding:8px 14px">重新載入 / Retry</button>
+    </div>
     <div class="top-controls">
+        <button type="button" class="sound-toggle" id="leaderboardBtn" data-i18n="ranking.button">🏆 排行榜</button>
         <button type="button" class="sound-toggle" id="soundToggle" aria-pressed="true" title="關閉音效">🔊 音效開啟</button>
         <div class="game-switcher">
             <label for="languageSelect" data-i18n="language.label">語言 / Language：</label>
@@ -62,6 +67,7 @@ Commercial use outside the permitted purposes requires separate permission.
             <div>
                 <h3 data-i18n="king.title">👑 歷史國王</h3>
                 <div class="score-display" id="highScoreDisplay">0</div>
+                <p class="king-name" id="kingName"></p>
             </div>
             <div class="tower-container">
                 <div class="tower-fill king-tower-fill" id="kingTowerFill"></div>
@@ -113,14 +119,44 @@ Commercial use outside the permitted purposes requires separate permission.
         </aside>
     </main>
     <footer class="site-footer">
-        <small><span data-i18n="app.version">版本</span> v1.1.1</small>
+        <small><span data-i18n="app.version">版本</span> v1.2.0</small>
     </footer>
     <div class="modal-overlay" id="gameOverModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalMessage" aria-hidden="true" inert>
         <div class="modal">
             <h2 id="modalTitle">遊戲結束</h2>
             <p id="modalMessage">棋盤已滿，無可落子位置！</p>
+            <form id="scoreForm" class="score-form">
+                <label for="playerName" data-i18n="ranking.name">玩家名稱</label>
+                <input id="playerName" name="nickname" type="text" maxlength="24" autocomplete="nickname" required>
+                <label for="playerComment" data-i18n="ranking.comment">留言（選填）</label>
+                <input id="playerComment" name="comment" type="text" maxlength="160" autocomplete="off">
+                <button type="submit" class="btn" id="submitScoreBtn" data-i18n="ranking.submit">送出成績</button>
+                <p id="submissionState" class="ranking-state" role="status" aria-live="polite"></p>
+            </form>
+            <button type="button" class="sound-toggle" id="modalLeaderboardBtn" data-i18n="ranking.view">查看排行</button>
             <button type="button" class="btn" id="modalRestartBtn" data-i18n="button.playAgain">再玩一次</button>
         </div>
+    </div>
+    <div class="modal-overlay leaderboard-overlay" id="leaderboardModal" role="dialog" aria-modal="true" aria-labelledby="leaderboardTitle" aria-hidden="true" inert>
+        <section class="glass-dialog">
+            <div class="ranking-heading">
+                <h2 id="leaderboardTitle" data-i18n="ranking.title">🏆 豆豆英雄榜</h2>
+                <button type="button" class="ranking-close" id="leaderboardClose" aria-label="關閉排行榜" data-i18n-aria-label="ranking.close">✕</button>
+            </div>
+            <p id="leaderboardState" class="ranking-state" role="status" aria-live="polite"></p>
+            <div class="ranking-table-scroll">
+                <table class="ranking-table">
+                    <thead><tr>
+                        <th scope="col" data-i18n="ranking.position">排名</th>
+                        <th scope="col" data-i18n="ranking.name">玩家名稱</th>
+                        <th scope="col" data-i18n="ranking.score">分數</th>
+                        <th scope="col" data-i18n="ranking.message">留言</th>
+                    </tr></thead>
+                    <tbody id="leaderboardRows"></tbody>
+                </table>
+            </div>
+            <button type="button" class="sound-toggle" id="leaderboardRefresh" data-i18n="ranking.refresh">重新整理排行</button>
+        </section>
     </div>
     <noscript><p class="noscript-message">請啟用 JavaScript 後遊玩此遊戲。Enable JavaScript to play.</p></noscript>
 </body>

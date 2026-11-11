@@ -23,7 +23,7 @@ export class GameUI {
         if (this.scoreState) this.renderScores(...this.scoreState);
         else this.refs.kingStatusText.textContent = this.i18n.t('player.challenge');
         if (this.comboCount !== undefined) this.setCombo(this.comboCount);
-        if (this.modalState) this.showGameOver(...this.modalState, false);
+        if (this.modalState) this.showGameOver(...this.modalState.slice(0, 2), false, this.modalState[2]);
         else {
             this.refs.modalTitle.textContent = this.i18n.t('modal.gameOver');
             this.refs.modalMessage.textContent = this.i18n.t('modal.full', {score: 0});
@@ -89,16 +89,16 @@ export class GameUI {
         this.refs.comboBadge.style.display = count > 1 ? 'block' : 'none';
     }
 
-    renderScores(score, highScore, startingHighScore) {
-        this.scoreState = [score, highScore, startingHighScore];
+    renderScores(score, highScore, startingHighScore, kingKnown = true) {
+        this.scoreState = [score, highScore, startingHighScore, kingKnown];
         const refs = this.refs;
         refs.currentScore.textContent = String(score);
         refs.currentScoreDisplay.textContent = String(score);
-        refs.highScoreDisplay.textContent = String(highScore);
+        refs.highScoreDisplay.textContent = kingKnown ? String(highScore) : '—';
         const maxTarget = Math.max(highScore, 500, score * 1.2);
         refs.playerTowerFill.parentElement.style.setProperty('--tower-level', `${Math.min(100, score / maxTarget * 100)}%`);
         refs.kingTowerFill.parentElement.style.setProperty('--tower-level', `${Math.min(100, highScore / maxTarget * 100)}%`);
-        const newRecord = score > startingHighScore;
+        const newRecord = kingKnown && score > startingHighScore;
         refs.playerAvatar.textContent = newRecord ? '👑' : '🧘';
         refs.kingAvatar.textContent = newRecord ? '🤴' : '👑';
         refs.kingStatusText.textContent = this.i18n.t(newRecord ? 'player.record' : 'player.challenge');
@@ -113,9 +113,9 @@ export class GameUI {
         if (this.document.activeElement === this.refs.modalRestartBtn) this.refs.restartBtn.focus({preventScroll: true});
     }
 
-    showGameOver(score, startingHighScore, focus = true) {
-        this.modalState = [score, startingHighScore];
-        const newRecord = score > startingHighScore;
+    showGameOver(score, startingHighScore, focus = true, kingKnown = true) {
+        this.modalState = [score, startingHighScore, kingKnown];
+        const newRecord = kingKnown && score > startingHighScore;
         this.refs.modalTitle.textContent = this.i18n.t(newRecord ? 'modal.newKing' : 'modal.gameOver');
         this.refs.modalMessage.textContent = this.i18n.t(newRecord ? 'modal.record' : 'modal.full', {score});
         this.refs.gameOverModal.inert = false;
