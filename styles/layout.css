@@ -1,4 +1,17 @@
 /* Page composition only. Device adaptations live in responsive.css. */
+.site-footer {
+    align-self: stretch;
+    margin-top: auto;
+    padding-top: 16px;
+    text-align: right;
+    color: #a0a0a0;
+    font-variant-numeric: tabular-nums;
+}
+
+.site-footer small {
+    font-size: 0.75rem;
+}
+
 .brand-heading {
     display: flex;
     align-items: center;

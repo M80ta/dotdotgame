@@ -3,6 +3,7 @@
 export const MESSAGES = {
     'zh-TW': {
         'app.title': '妮妮的豆豆大戰',
+        'app.version': '版本',
         'app.description': '妮妮的豆豆大戰：選球移動、五連線消除，支援手機、平板與電腦的策略小遊戲。',
         'app.socialDescription': '和可愛豆豆一起挑戰五連線！手機、平板與電腦都能玩。',
         'app.subtitle': '策略連線消除・挑戰國王寶座',
@@ -62,6 +63,7 @@ export const MESSAGES = {
     },
     en: {
         'app.title': "Nini's Bean Battle",
+        'app.version': 'Version',
         'app.description': "Nini's Bean Battle: move beans, make five-in-a-row matches, and claim the crown. Play on phones, tablets, and computers.",
         'app.socialDescription': 'Make five in a row with cheerful beans! Play on your phone, tablet, or computer.',
         'app.subtitle': 'Make five in a row · Claim the crown',
