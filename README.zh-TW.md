@@ -18,6 +18,16 @@
 
 GitHub 預設顯示英文 `README.md`，本檔 `README.zh-TW.md` 保留完整繁體中文說明，兩者互相連結。
 
+## 遊戲音效
+
+- 點選或取消選取豆豆：短促的「豆」語音，中英文介面皆相同。
+- 豆豆移動：溫和、偏低音的史萊姆拖曳聲，移動結束即停止。
+- 消除連線：短促的泡泡破裂聲；大量消除時限制同時音量。
+
+音效預設開啟，右上角「音效開啟／音效關閉」按鈕會記住目前瀏覽器的選擇，與對局、語言偏好分開儲存。靜音、重來、變更棋盤或球數，以及切到背景／離開頁面，都會停止播放或取消尚未播放的音效；返回頁面不會補播舊音效。
+
+`GameAudio` 使用單一 Web Audio context，依[瀏覽器自動播放指引](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Best_practices#autoplay_policy)在玩家操作時才建立或恢復。短語音隨網站提供，拖曳與泡泡波形於本機產生，不需要執行期語音服務或額外套件。音訊不支援、下載失敗或播放受阻時，遊戲仍可正常進行；裝置音量、靜音模式與瀏覽器設定可能影響是否聽得到音效。
+
 ## 本機啟動
 
 需要 Node.js 20 以上；GitHub Actions 使用 Node.js 24。沒有外部套件，不必執行 `npm install`。
@@ -68,10 +78,13 @@ assets/
   doudou-icon.png                 豆豆圖示生成原圖
   doudou-icon-{32,180,512}.png     分頁、手機主畫面與分享用圖示
   doudou.ico                      多尺寸瀏覽器分頁圖示
+  audio/dou.wav                   隨網站提供的「豆」短語音
   README.md                       圖示用途、生成方式與提示詞
 src/
   main.js                        建立並組合各模組，啟動遊戲
   config.js                      尺寸、n、連線門檻、方向、儲存鍵值
+  audio/
+    sound-effects.js             溫和拖曳循環與泡泡破裂波形
   board/
     board.js                     棋盤資料、隨機空格、BFS、移動與清除
     board-view.js                棋盤 DOM、選取樣式、滑鼠／觸控／鍵盤輸入
@@ -89,6 +102,7 @@ src/
     messages.js                  繁體中文與英文翻譯字典
     translator.js                語言偏好、文字格式與頁面語系更新
   services/
+    game-audio.js                音效播放、取消、靜音偏好與背景處理
     high-score.js                隔離瀏覽器儲存與例外處理
     game-session.js              裝置本機對局存檔、版本及讀寫錯誤處理
 styles/
@@ -166,6 +180,8 @@ node scripts/serve.mjs --dir dist --port 4174
 ```
 
 測試涵蓋設定組合、最短路徑與阻擋、整批補球、四方向消除、長連線、交叉 Combo、滿盤、重新整理恢復、動畫中重整／重來、設定變更重開、存檔損壞與儲存失敗、UI／鍵盤，以及 ES Modules 相對路徑與 HTTP MIME。另驗證語言切換、英文動態提示、舊存檔相容及動畫中切換不影響回合。DOM 整合測試使用輕量替身；不等同各實體裝置的瀏覽器測試。
+
+音效測試另涵蓋玩家操作後才啟動、播放時機、舊局取消、切到背景、靜音偏好、音訊／儲存失敗、波形範圍及 WAV 格式。Audio API 替身驗證排程與資源清理；實際喇叭音量及各裝置靜音模式仍需在目標裝置聆聽驗證。
 
 `dist/` 只包含遊戲入口、`src/`、`styles/`、`assets/`、舊入口與說明／授權，不會上傳 `.git/`、測試、開發快取或環境檔。`dist/` 是自動產物，不提交到 Git。
 

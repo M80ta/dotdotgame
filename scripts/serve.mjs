@@ -4,7 +4,7 @@ import path from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
-const mimeTypes = {'.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/vnd.microsoft.icon', '.md': 'text/plain; charset=utf-8'};
+const mimeTypes = {'.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/vnd.microsoft.icon', '.wav': 'audio/wav', '.md': 'text/plain; charset=utf-8'};
 
 export function createStaticServer(root = projectRoot) {
     const resolvedRoot = path.resolve(root);

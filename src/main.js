@@ -7,6 +7,7 @@ import {GameSessionStore} from './services/game-session.js';
 import {BallAnimator} from './ui/ball-animator.js';
 import {GameUI} from './ui/game-ui.js';
 import {I18n} from './i18n/translator.js';
+import {GameAudio} from './services/game-audio.js';
 
 const i18n = new I18n({
     getStorage: () => window.localStorage,
@@ -16,6 +17,7 @@ const ui = new GameUI(document, i18n);
 const boardView = new BoardView(document.getElementById('gameBoard'), document, i18n);
 const controller = new GameController({
     ui, boardView,
+    audio: new GameAudio(window),
     animator: new BallAnimator(boardView, window),
     store: new HighScoreStore(() => window.localStorage),
     sessionStore: new GameSessionStore(() => window.localStorage)

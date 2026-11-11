@@ -6,14 +6,22 @@ import {restoreStatus} from './status.js';
 
 /** Coordinates model, UI, persistence and async animation; no board algorithms. */
 export class GameController {
-    constructor({ui, boardView, animator, store, sessionStore, random = Math.random, onError = console.error}) {
-        Object.assign(this, {ui, boardView, animator, store, sessionStore, random, onError});
+    constructor({ui, boardView, animator, store, sessionStore, audio = null, random = Math.random, onError = console.error}) {
+        Object.assign(this, {ui, boardView, animator, store, sessionStore, audio, random, onError});
         this.i18n = ui.i18n;
         this.version = 0;
         this.processing = false;
         this.highScore = store.read();
         this.boardView.onCellClick = (r, c) => this.handleCellClick(r, c);
-        ui.bind({restart: () => this.restart(), changeLanguage: language => this.changeLanguage(language)});
+        ui.bind({
+            restart: () => this.restart(), changeLanguage: language => this.changeLanguage(language),
+            toggleSound: () => {
+                if (!this.audio) return;
+                this.audio.setEnabled(!this.audio.enabled);
+                this.ui.setSoundEnabled(this.audio.enabled);
+            }
+        });
+        ui.setSoundEnabled(this.audio?.enabled ?? true);
     }
 
     start() {
@@ -31,6 +39,7 @@ export class GameController {
 
     activateGame(game, {startingHighScore = this.highScore, combo = 0, message, status, newCells = new Set()} = {}) {
         this.version++;
+        this.audio?.stopAll();
         this.animator.cancel();
         this.game = game;
         this.startingHighScore = startingHighScore;
@@ -106,6 +115,7 @@ export class GameController {
         if (this.processing) return;
         const move = this.game.selectCell(r, c);
         if (move.type !== 'move') {
+            if (move.type === 'selected' || move.type === 'deselected') this.audio?.playSelect();
             if (move.type !== 'ignored') {
                 this.setStatus(move.type);
                 this.renderHint();
@@ -121,6 +131,7 @@ export class GameController {
         this.ui.setProcessing(true);
         this.ui.setCombo(0);
         this.renderHint();
+        let stopMovement;
         try {
             // Commit one complete turn before any await. Refreshing during an
             // animation restores this result, without repeating random spawns.
@@ -135,12 +146,15 @@ export class GameController {
             else this.setStatus('spawned', {count: spawned.size});
             this.persistSession();
 
+            stopMovement = this.audio?.startMove();
             await this.animator.move(move);
+            stopMovement?.();
             if (version !== this.version) return;
             this.ui.renderPreview(game.preview);
             this.boardView.render(revealBoard, null, spawned);
             await this.animator.wait(200);
             if (version !== this.version) return;
+            this.audio?.playClear(lines.cells.size);
             await this.animator.clear(lines.cells);
             if (version !== this.version) return;
             this.renderGame();
@@ -153,6 +167,7 @@ export class GameController {
                 this.persistSession();
             }
         } finally {
+            stopMovement?.();
             // Restarting makes every pending stage of the previous turn stale.
             if (version === this.version) {
                 this.finishProcessing();

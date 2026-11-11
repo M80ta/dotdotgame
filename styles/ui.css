@@ -1,6 +1,6 @@
 /* Settings, score panels, towers, and modal;
 no board or ball rules. */
-.game-switcher select, .settings-bar select {
+.game-switcher select, .settings-bar select, .sound-toggle {
     min-height: 44px;
     max-width: 100%;
     background: #0f172a;

@@ -19,7 +19,23 @@ export function createMemoryStorage(initial = {}) {
     };
 }
 
-export function createApp({size = 8, batch = 3, reducedMotion = true, deferAnimation = false, deferWait = false, storage = createMemoryStorage(), language = 'zh-TW'} = {}) {
+export function createAudioSpy() {
+    const calls = [];
+    return {
+        enabled: true, calls,
+        setEnabled(value) { this.enabled = value; calls.push(['enabled', value]); },
+        playSelect() { calls.push(['select']); },
+        startMove() {
+            const call = ['move', false];
+            calls.push(call);
+            return () => { call[1] = true; };
+        },
+        playClear(count) { if (count > 0) calls.push(['clear', count]); },
+        stopAll() { calls.push(['stop-all']); }
+    };
+}
+
+export function createApp({size = 8, batch = 3, reducedMotion = true, deferAnimation = false, deferWait = false, storage = createMemoryStorage(), language = 'zh-TW', audio = createAudioSpy()} = {}) {
     const animations = [];
     const waits = [];
     const errors = [];
@@ -114,7 +130,7 @@ export function createApp({size = 8, batch = 3, reducedMotion = true, deferAnima
     };
     const animator = new BallAnimator(view, window);
     const controller = new GameController({
-        ui, boardView: view, animator,
+        ui, boardView: view, animator, audio,
         store: new HighScoreStore(() => storage),
         sessionStore: new GameSessionStore(() => storage),
         random: () => randomValues.length ? randomValues.shift() : 0.37,
@@ -122,7 +138,7 @@ export function createApp({size = 8, batch = 3, reducedMotion = true, deferAnima
     });
     controller.start();
     return {
-        controller, ui, view, animator, document, elements, animations, waits, errors, storage, i18n,
+        controller, ui, view, animator, document, elements, animations, waits, errors, storage, i18n, audio,
         setRandom: values => { randomValues = values.slice(); },
         click: (r, c) => view.getCell(r, c).listeners.click(),
         emptyBoard() {

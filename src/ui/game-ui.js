@@ -10,7 +10,7 @@ export class GameUI {
         const ids = ['boardSizeSelect', 'queueSizeSelect', 'restartBtn', 'modalRestartBtn', 'gameOverModal',
             'modalTitle', 'modalMessage', 'ballQueuePreview', 'moveHint', 'comboBadge', 'currentScore',
             'currentScoreDisplay', 'highScoreDisplay', 'playerTowerFill', 'kingTowerFill', 'playerAvatar',
-            'kingAvatar', 'kingStatusText', 'gameBoard', 'languageSelect'];
+            'kingAvatar', 'kingStatusText', 'gameBoard', 'languageSelect', 'soundToggle'];
         this.refs = Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));
         this.localize();
     }
@@ -18,6 +18,7 @@ export class GameUI {
     localize() {
         this.i18n.apply(this.document);
         this.refs.languageSelect.value = this.i18n.language;
+        this.setSoundEnabled(this.soundEnabled ?? true);
         if (this.preview) this.renderPreview(this.preview);
         if (this.scoreState) this.renderScores(...this.scoreState);
         else this.refs.kingStatusText.textContent = this.i18n.t('player.challenge');
@@ -38,12 +39,20 @@ export class GameUI {
         this.refs.queueSizeSelect.value = String(batchSize);
     }
 
-    bind({restart, changeLanguage}) {
+    bind({restart, changeLanguage, toggleSound}) {
         this.refs.restartBtn.addEventListener('click', restart);
         this.refs.modalRestartBtn.addEventListener('click', restart);
         this.refs.boardSizeSelect.addEventListener('change', restart);
         this.refs.queueSizeSelect.addEventListener('change', restart);
         this.refs.languageSelect.addEventListener('change', () => changeLanguage(this.refs.languageSelect.value));
+        this.refs.soundToggle.addEventListener('click', toggleSound);
+    }
+
+    setSoundEnabled(enabled) {
+        this.soundEnabled = enabled;
+        this.refs.soundToggle.textContent = this.i18n.t(enabled ? 'audio.on' : 'audio.off');
+        this.refs.soundToggle.setAttribute('aria-pressed', String(enabled));
+        this.refs.soundToggle.setAttribute('title', this.i18n.t(enabled ? 'audio.mute' : 'audio.unmute'));
     }
 
     setProcessing(processing) {

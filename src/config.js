@@ -10,5 +10,6 @@ export const HIGH_SCORE_KEY = 'dot_crown_highscore';
 export const GAME_SESSION_KEY = 'nini_doudou_game_a_session';
 export const GAME_SESSION_VERSION = 1;
 export const LANGUAGE_KEY = 'nini_doudou_language';
+export const AUDIO_KEY = 'nini_doudou_audio';
 export const MOVE_DIRECTIONS = Object.freeze([[-1, 0], [0, 1], [1, 0], [0, -1]]);
 export const LINE_DIRECTIONS = Object.freeze([[0, 1], [1, 0], [1, 1], [1, -1]]);

@@ -19,6 +19,16 @@ On the first visit, Chinese browser locales use Traditional Chinese; other brows
 
 GitHub uses this English `README.md` as the main project description. [README.zh-TW.md](./README.zh-TW.md) contains the complete Traditional Chinese version.
 
+## Sound effects
+
+- Selecting or deselecting a bean plays a short spoken **“豆” (dòu)** cue in either language.
+- Moving plays a gentle, low-pitched slime drag sound that stops when the movement ends.
+- Clearing plays a short cluster of soft bubble pops, with a volume limit for large combos.
+
+Sound is on by default. The **Sound on / Sound off** button at the top remembers the choice in this browser, separately from the game save and language. Muting, restarting, changing game settings, or leaving/backgrounding the page stops active and pending sounds. Returning to the page does not replay old effects.
+
+`GameAudio` uses one Web Audio context, created or resumed from a player action in accordance with [browser autoplay guidance](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Best_practices#autoplay_policy). The Chinese cue is bundled as a small WAV; drag and pop waveforms are generated locally. There is no runtime speech service or extra package. Unavailable audio, failed downloads, or blocked playback leave the game playable. Device volume, silent mode, and browser settings can affect audibility.
+
 ## Run locally
 
 Use Node.js 20 or later. GitHub Actions uses Node.js 24. There are no external dependencies, so `npm install` is unnecessary.
@@ -72,10 +82,13 @@ assets/
   doudou-icon.png                 Original generated bean icon
   doudou-icon-{32,180,512}.png     Tab, home-screen, and sharing icons
   doudou.ico                      Multi-resolution browser icon
+  audio/dou.wav                   Short bundled Chinese selection cue
   README.md                       Icon usage and generation prompt
 src/
   main.js                        Compose the modules and start the app
   config.js                      Sizes, line threshold, directions, storage keys
+  audio/
+    sound-effects.js             Gentle drag-loop and bubble-pop waveforms
   board/
     board.js                     Board data, empty cells, BFS, movement, clearing
     board-view.js                Board DOM, selection, mouse/touch/keyboard input
@@ -93,6 +106,7 @@ src/
     game-ui.js                   Settings, preview, scores, towers, dialogs
     ball-animator.js              Slime-like movement and clearing animations
   services/
+    game-audio.js                Audio playback, cancellation, mute preference
     high-score.js                High-score storage and error handling
     game-session.js              Versioned device-local game saves
 styles/
@@ -170,6 +184,8 @@ node scripts/serve.mjs --dir dist --port 4174
 ```
 
 Tests cover settings, shortest paths, blocked moves, batch spawning, all line directions, long lines, crossing combos, full boards, reload recovery, refresh/restart during animation, settings resets, corrupt saves, storage failures, keyboard input, language switching, legacy save compatibility, relative ES Module imports, and HTTP MIME types. DOM integration tests use lightweight doubles and do not replace real-device browser testing.
+
+Audio tests additionally cover gesture-based startup, sound timing, stopping old turns, backgrounding, mute persistence, failed audio/storage, waveform bounds, and WAV format. Audio API doubles verify scheduling and cleanup; actual speaker loudness and device silent-mode behavior still need listening checks on target devices.
 
 `dist/` contains only the game entries, `src/`, `styles/`, `assets/`, both READMEs, and the license. Git data, tests, development caches, and environment files are excluded. Build output is ignored by Git.
 
