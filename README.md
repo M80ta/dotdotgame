@@ -97,6 +97,7 @@ src/
   game/
     game-a.js                    Game A state and turn rules, without DOM access
     lines.js                     Four-direction detection and crossing deduplication
+    hints.js                     Reachable candidate evaluation without random spawns
     controller.js                Coordinate turns, animation, UI, and persistence
     status.js                    Language-neutral status codes and legacy saves
   i18n/

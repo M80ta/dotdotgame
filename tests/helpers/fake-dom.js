@@ -98,7 +98,7 @@ export function createApp({size = 8, batch = 3, reducedMotion = true, deferAnima
             let resolve;
             let reject;
             const finished = deferAnimation ? new Promise((res, rej) => { resolve = res; reject = rej; }) : Promise.resolve();
-            const animation = {keyframes, options, finished, resolve, cancel() { reject?.(new Error('Animation cancelled')); }};
+            const animation = {element: this, keyframes, options, finished, resolve, cancel() { reject?.(new Error('Animation cancelled')); }};
             animations.push(animation);
             return animation;
         }

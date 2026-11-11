@@ -3,6 +3,7 @@
 import {GameA} from './game-a.js';
 import {Board} from '../board/board.js';
 import {restoreStatus} from './status.js';
+import {findSuggestedMove} from './hints.js';
 
 /** Coordinates model, UI, persistence and async animation; no board algorithms. */
 export class GameController {
@@ -15,6 +16,7 @@ export class GameController {
         this.boardView.onCellClick = (r, c) => this.handleCellClick(r, c);
         ui.bind({
             restart: () => this.restart(), changeLanguage: language => this.changeLanguage(language),
+            requestHint: () => this.requestHint(),
             toggleSound: () => {
                 if (!this.audio) return;
                 this.audio.setEnabled(!this.audio.enabled);
@@ -86,6 +88,17 @@ export class GameController {
         this.persistSession();
     }
 
+    requestHint() {
+        if (this.processing || this.game.isOver) return;
+        const hint = findSuggestedMove(this.game.board);
+        if (!hint) return;
+        this.game.selectedBall = {...hint.source};
+        this.setStatus('selected');
+        this.boardView.render(this.game.board, this.game.selectedBall);
+        this.persistSession();
+        this.boardView.flashHintTarget(hint.target);
+    }
+
     updateHighScore() {
         const highScore = Math.max(this.highScore, this.game.score, this.startingHighScore);
         if (highScore > this.highScore) {
@@ -127,6 +140,7 @@ export class GameController {
 
         const game = this.game;
         const version = this.version;
+        this.boardView.clearHint();
         this.processing = true;
         this.ui.setProcessing(true);
         this.ui.setCombo(0);

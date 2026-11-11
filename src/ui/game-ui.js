@@ -10,7 +10,7 @@ export class GameUI {
         const ids = ['boardSizeSelect', 'queueSizeSelect', 'restartBtn', 'modalRestartBtn', 'gameOverModal',
             'modalTitle', 'modalMessage', 'ballQueuePreview', 'moveHint', 'comboBadge', 'currentScore',
             'currentScoreDisplay', 'highScoreDisplay', 'playerTowerFill', 'kingTowerFill', 'playerAvatar',
-            'kingAvatar', 'kingStatusText', 'gameBoard', 'languageSelect', 'soundToggle'];
+            'kingAvatar', 'kingStatusText', 'gameBoard', 'languageSelect', 'soundToggle', 'brandHintButton'];
         this.refs = Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));
         this.localize();
     }
@@ -39,13 +39,14 @@ export class GameUI {
         this.refs.queueSizeSelect.value = String(batchSize);
     }
 
-    bind({restart, changeLanguage, toggleSound}) {
+    bind({restart, changeLanguage, toggleSound, requestHint}) {
         this.refs.restartBtn.addEventListener('click', restart);
         this.refs.modalRestartBtn.addEventListener('click', restart);
         this.refs.boardSizeSelect.addEventListener('change', restart);
         this.refs.queueSizeSelect.addEventListener('change', restart);
         this.refs.languageSelect.addEventListener('change', () => changeLanguage(this.refs.languageSelect.value));
         this.refs.soundToggle.addEventListener('click', toggleSound);
+        this.refs.brandHintButton.addEventListener('click', requestHint);
     }
 
     setSoundEnabled(enabled) {

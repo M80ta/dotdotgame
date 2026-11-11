@@ -9,9 +9,11 @@ export class BoardView {
         this.document = document;
         this.i18n = i18n;
         this.onCellClick = () => {};
+        this.hintAnimation = null;
     }
 
     render(board, selectedBall, newCells = new Set()) {
+        this.clearHint();
         const focused = this.document.activeElement;
         const focus = this.root.contains(focused) && focused?.dataset.row !== undefined
             ? {r: Number(focused.dataset.row), c: Number(focused.dataset.col)} : null;
@@ -55,6 +57,25 @@ export class BoardView {
 
     getCell(r, c) {
         return this.root.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+    }
+
+    flashHintTarget({r, c}) {
+        this.clearHint();
+        const cell = this.getCell(r, c);
+        const dim = {boxShadow: 'inset 0 0 0 0 rgb(255 215 0 / 0%), 0 0 0 rgb(255 215 0 / 0%)'};
+        const bright = {boxShadow: 'inset 0 0 0 3px #ffd700, 0 0 14px rgb(255 215 0 / 85%)'};
+        const animation = cell.animate([dim, bright, dim], {duration: 480, iterations: 2, easing: 'ease-in-out'});
+        this.hintAnimation = animation;
+        const finish = () => {
+            if (this.hintAnimation === animation) this.hintAnimation = null;
+        };
+        void animation.finished.then(finish, finish);
+    }
+
+    clearHint() {
+        const animation = this.hintAnimation;
+        this.hintAnimation = null;
+        animation?.cancel();
     }
 
     setCellLabel(cell, r, c, color) {

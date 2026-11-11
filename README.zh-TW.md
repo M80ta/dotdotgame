@@ -93,6 +93,7 @@ src/
   game/
     game-a.js                    遊戲 A 狀態與回合規則，無 DOM 相依
     lines.js                     四方向連線偵測、交叉去重與線數計算
+    hints.js                     合法候選移動評估，不產生亂數補球
     controller.js                協調回合、動畫、UI 與最高分
     status.js                    跨語言提示代碼與舊存檔相容處理
   ui/
