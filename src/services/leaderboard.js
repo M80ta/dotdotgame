@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import {LEADERBOARD_CONFIG} from './leaderboard-config.js';
 
-const CACHE_KEY = 'nini_doudou_rankings_v1';
+const CACHE_KEY = 'nini_doudou_rankings_v2';
 const QUEUE_KEY = 'nini_doudou_pending_scores_v1';
 const NAME_KEY = 'nini_doudou_player_name';
 const UUID = /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i;
@@ -17,19 +17,13 @@ export function validateScore(entry) {
         && [8, 9, 10].includes(entry.boardSize) && [3, 4, 5].includes(entry.batchSize));
 }
 
-/** Shared scores with a last-known snapshot and an idempotent offline outbox. */
+/** Difficulty-scoped shared scores, independent snapshots, and one offline outbox. */
 export class LeaderboardService {
     constructor({getStorage = () => window.localStorage, fetch = (...args) => window.fetch(...args),
         config = LEADERBOARD_CONFIG, timeout = 8000} = {}) {
         Object.assign(this, {getStorage, fetch, config, timeout});
-        this.entries = [];
-        this.known = false;
-        this.state = 'loading';
-        const cached = this.read(CACHE_KEY, null);
-        if (cached?.version === 1 && Array.isArray(cached.entries) && cached.entries.every(validateScore)) {
-            this.entries = cached.entries.slice(0, 50);
-            this.known = true;
-        }
+        this.loadVersions = new Map();
+        this.selectDifficulty(8, 3);
         const queued = this.read(QUEUE_KEY, []);
         this.pending = Array.isArray(queued) ? queued.filter(validateScore).slice(0, 20) : [];
     }
@@ -40,7 +34,21 @@ export class LeaderboardService {
     }
     get topScore() { return this.entries[0]?.score ?? 0; }
     get topName() { return this.entries[0]?.name ?? ''; }
+    get difficultyKey() { return `${this.boardSize}_${this.batchSize}`; }
     get playerName() { const value = this.read(NAME_KEY, ''); return typeof value === 'string' ? value.slice(0, 24) : ''; }
+
+    selectDifficulty(boardSize, batchSize) {
+        if (![8, 9, 10].includes(boardSize) || ![3, 4, 5].includes(batchSize)) throw new Error('Invalid difficulty');
+        if (boardSize === this.boardSize && batchSize === this.batchSize) return false;
+        Object.assign(this, {boardSize, batchSize, entries: [], known: false, state: this.configured ? 'loading' : 'setup'});
+        const cached = this.read(`${CACHE_KEY}_${this.difficultyKey}`, null);
+        if (cached?.version === 2 && Array.isArray(cached.entries)
+            && cached.entries.every(entry => validateScore(entry) && entry.boardSize === boardSize && entry.batchSize === batchSize)) {
+            this.entries = cached.entries.slice(0, 50);
+            this.known = true;
+        }
+        return true;
+    }
 
     read(key, fallback) {
         try { return JSON.parse(this.getStorage().getItem(key)) ?? fallback; } catch { return fallback; }
@@ -72,16 +80,22 @@ export class LeaderboardService {
         } finally { clearTimeout(timer); }
     }
 
-    async load() {
-        if (!this.configured) { this.state = 'setup'; return; }
+    async load({boardSize = this.boardSize, batchSize = this.batchSize} = {}) {
+        const key = `${boardSize}_${batchSize}`;
+        const version = (this.loadVersions.get(key) ?? 0) + 1;
+        this.loadVersions.set(key, version);
+        if (!this.configured) { if (key === this.difficultyKey) this.state = 'setup'; return; }
         try {
-            const data = await this.request('get_leaderboard', {p_limit: 50});
-            if (!Array.isArray(data.entries) || !data.entries.every(validateScore)) throw new Error('Invalid leaderboard');
-            this.entries = data.entries.slice(0, 50);
-            this.known = true;
-            this.state = 'ready';
-            this.write(CACHE_KEY, {version: 1, entries: this.entries});
-        } catch { this.state = 'offline'; }
+            const data = await this.request('get_leaderboard', {p_board_size: boardSize, p_batch_size: batchSize, p_limit: 50});
+            if (!Array.isArray(data.entries) || !data.entries.every(entry => validateScore(entry)
+                && entry.boardSize === boardSize && entry.batchSize === batchSize)) throw new Error('Invalid leaderboard');
+            if (version !== this.loadVersions.get(key)) return;
+            const entries = data.entries.slice(0, 50);
+            this.write(`${CACHE_KEY}_${key}`, {version: 2, entries});
+            if (key === this.difficultyKey) Object.assign(this, {entries, known: true, state: 'ready'});
+        } catch {
+            if (key === this.difficultyKey && version === this.loadVersions.get(key)) this.state = 'offline';
+        }
     }
 
     async send(entry) {
@@ -110,14 +124,18 @@ export class LeaderboardService {
         }
     }
 
-    async flush() {
-        const sent = [];
-        if (!this.configured) return sent;
-        for (const entry of [...this.pending]) {
-            try { sent.push({id: entry.id, rank: await this.send(entry)}); } catch { break; }
-            this.pending = this.pending.filter(item => item.id !== entry.id);
-            this.write(QUEUE_KEY, this.pending);
-        }
-        return sent;
+    flush() {
+        if (this.flushing) return this.flushing;
+        this.flushing = (async () => {
+            const sent = [];
+            if (!this.configured) return sent;
+            for (const entry of [...this.pending]) {
+                try { sent.push({id: entry.id, rank: await this.send(entry)}); } catch { break; }
+                this.pending = this.pending.filter(item => item.id !== entry.id);
+                this.write(QUEUE_KEY, this.pending);
+            }
+            return sent;
+        })().finally(() => { this.flushing = null; });
+        return this.flushing;
     }
 }

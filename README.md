@@ -57,6 +57,8 @@ A first visit still needs a connection: files that have never been downloaded ca
 
 The top-right **Leaderboard** button opens a floating glass panel listing the top 50 names, scores, comments, and ranks. Tied scores share a rank. Every completed game offers a player name (1–24 characters), optional single-line message (up to 160 characters), submission, and a rankings button. Names are remembered locally; messages reset each game.
 
+Rankings are separate for each **board size × beans per turn** combination: 8×8, 9×9, or 10×10 with 3, 4, or 5 beans (nine leaderboards). The panel, reigning king, and submitted rank all use that game's difficulty. Changing either setting starts a fresh game and immediately selects its leaderboard; the panel displays the selected difficulty. Restored games select their saved difficulty. Each difficulty keeps its own offline snapshot, and delayed responses cannot replace another difficulty's rankings. Offline results retain their original settings when retried. The old mixed leaderboard cache is ignored.
+
 The **Reigning King** comes from the highest published shared score and that player's name. Local points do not replace the published king until submitted. Before any shared snapshot has been downloaded, the score is unknown; offline snapshots are identified as cached. Device-local legacy high scores are not automatically published.
 
 Offline submissions wait in a bounded outbox and reuse the same UUID on retry. Reconnection, returning to the page, opening/refreshing rankings, and a visible-page retry timer attempt delivery. A successful retry updates that game's rank. Storage failure is not presented as a safely retained result.
@@ -133,7 +135,7 @@ src/
     game-audio.js                Audio playback, cancellation, mute preference
     high-score.js                High-score storage and error handling
     game-session.js              Versioned device-local game saves
-    leaderboard.js               REST client, global snapshot and offline outbox
+    leaderboard.js               Scoped REST client, per-difficulty snapshots and offline outbox
     leaderboard-config.js        Public Supabase URL and publishable key
 styles/
   base.css                       Colors, typography, global styles, focus

@@ -50,7 +50,7 @@ export class GameController {
         this.message = this.i18n.t(`hint.${this.status.code}`, this.status.params);
         this.lastSaveSucceeded = true;
         this.processing = false;
-        this.rankings?.onGameStart();
+        this.rankings?.onGameStart(game);
         this.updateHighScore();
         this.ui.setSettings({boardSize: game.board.size, batchSize: game.batchSize});
         this.renderGame(newCells);

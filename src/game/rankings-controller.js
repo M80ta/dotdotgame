@@ -3,15 +3,19 @@
 export class RankingsController {
     constructor({service, view, createId = () => crypto.randomUUID()}) {
         Object.assign(this, {service, view, createId});
+        this.refreshes = new Map();
         view.bind({open: () => this.open(), refresh: () => this.refresh(), submit: values => this.submit(values)});
         this.view.render(this.service);
     }
     get known() { return this.service.known; }
     get topScore() { return this.service.topScore; }
     attach(game) { this.game = game; }
-    onGameStart() {
+    onGameStart(game) {
         this.result = null;
+        const changed = this.service.selectDifficulty(game.board.size, game.batchSize);
+        this.view.render(this.service);
         this.view.resetForm(this.service.playerName);
+        if (changed) void this.refresh();
     }
     onGameOver(game) {
         if (this.result?.game === game) return;
@@ -28,20 +32,23 @@ export class RankingsController {
         void this.refresh();
     }
     refresh() {
-        if (this.refreshing) return this.refreshing;
+        const key = this.service.difficultyKey;
+        if (this.refreshes.has(key)) return this.refreshes.get(key);
+        const difficulty = {boardSize: this.service.boardSize, batchSize: this.service.batchSize};
         this.service.state = 'loading';
         this.view.render(this.service);
-        this.refreshing = (async () => {
+        const refreshing = (async () => {
             const sent = await this.service.flush();
-            await this.service.load();
+            await this.service.load(difficulty);
             this.sync();
             const submitted = sent.find(entry => entry.id === this.result?.id);
             if (submitted) {
                 this.result.submitted = true;
                 this.view.setSubmission('rank', {rank: submitted.rank});
             }
-        })().finally(() => { this.refreshing = null; });
-        return this.refreshing;
+        })().finally(() => { this.refreshes.delete(key); });
+        this.refreshes.set(key, refreshing);
+        return refreshing;
     }
     async submit({name, comment}) {
         if (!this.result || this.submitting || this.result.submitted) return;

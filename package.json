@@ -1,6 +1,6 @@
 {
   "name": "dotdotgame",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "private": true,
   "type": "module",
   "description": "妮妮的豆豆大戰：可於手機、平板與電腦遊玩的連線消除遊戲",

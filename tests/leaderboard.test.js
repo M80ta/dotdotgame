@@ -75,7 +75,7 @@ test('a missing backend never invents global ranks and clearly keeps scores pend
     assert.equal(calls.length, 0);
 });
 
-test('offline and invalid responses preserve the last downloaded global leaderboard', async () => {
+test('offline and invalid responses preserve the last downloaded leaderboard for this difficulty', async () => {
     const initial = serviceFixture();
     await initial.service.load();
     for (const fetch of [async () => { throw new Error('Offline'); }, async () => response({entries: [{score: -1}]})]) {
@@ -85,6 +85,136 @@ test('offline and invalid responses preserve the last downloaded global leaderbo
         assert.equal(service.known, true);
         assert.equal(service.topScore, 250);
     }
+});
+
+test('all nine difficulties request and restore independent rankings, including empty boards', async () => {
+    const storage = createMemoryStorage();
+    storage.setItem('nini_doudou_rankings_v1', JSON.stringify({version: 1, entries: [entry]}));
+    const calls = [];
+    const {service} = serviceFixture({storage, fetch: async (url, init) => {
+        const {p_board_size: boardSize, p_batch_size: batchSize, p_limit} = JSON.parse(init.body);
+        calls.push([boardSize, batchSize, p_limit]);
+        return response({entries: batchSize === 5 ? [] : [{...entry, boardSize, batchSize, score: boardSize * 10 + batchSize}]});
+    }});
+    assert.equal(service.known, false, 'the old mixed snapshot is not reused');
+    for (const size of [8, 9, 10]) for (const batch of [3, 4, 5]) {
+        service.selectDifficulty(size, batch);
+        assert.equal(service.known, false);
+        assert.equal(service.topScore, 0);
+        await service.load();
+        assert.equal(service.known, true);
+        assert.equal(service.topScore, batch === 5 ? 0 : size * 10 + batch);
+    }
+    assert.equal(calls.length, 9);
+    assert.deepEqual(calls[8], [10, 5, 50]);
+    const restored = serviceFixture({storage, fetch: async () => { throw new Error('Offline'); }}).service;
+    for (const size of [8, 9, 10]) for (const batch of [3, 4, 5]) {
+        restored.selectDifficulty(size, batch);
+        await restored.load();
+        assert.equal(restored.state, 'offline');
+        assert.equal(restored.known, true);
+        assert.equal(restored.topScore, batch === 5 ? 0 : size * 10 + batch);
+    }
+});
+
+test('late responses cannot overwrite another difficulty or a newer response for the same difficulty', async () => {
+    const requests = [];
+    const {service} = serviceFixture({fetch: (url, init) => new Promise(resolve => requests.push({resolve, body: JSON.parse(init.body)}))});
+    const old = service.load();
+    service.selectDifficulty(10, 4);
+    const current = service.load();
+    requests[1].resolve(response({entries: [{...entry, score: 100, boardSize: 10, batchSize: 4}]}));
+    await current;
+    requests[0].resolve(response({entries: [entry]}));
+    await old;
+    assert.equal(service.topScore, 100);
+    assert.equal(service.state, 'ready');
+    const earlier = service.load();
+    const newer = service.load();
+    requests[3].resolve(response({entries: []}));
+    await newer;
+    requests[2].resolve(response({entries: [{...entry, boardSize: 10, batchSize: 4}]}));
+    await earlier;
+    assert.equal(service.known, true);
+    assert.deepEqual(service.entries, []);
+});
+
+test('mixed server results and wrongly labelled caches never become the selected king', async () => {
+    const storage = createMemoryStorage();
+    storage.setItem('nini_doudou_rankings_v2_10_3', JSON.stringify({version: 2, entries: [entry]}));
+    const {service} = serviceFixture({storage});
+    service.selectDifficulty(10, 3);
+    await service.load();
+    assert.equal(service.known, false);
+    assert.equal(service.topName, '');
+    assert.equal(service.state, 'offline');
+});
+
+test('changing either game setting immediately switches the king and scoped bilingual ranking label', async () => {
+    const requests = [];
+    const {service} = serviceFixture({fetch: (url, init) => new Promise(resolve => requests.push({resolve, body: JSON.parse(init.body)}))});
+    const app = rankedApp(service);
+    const first = app.rankings.refresh();
+    await new Promise(setImmediate);
+    requests[0].resolve(response({entries: [entry]}));
+    await first;
+    assert.equal(app.elements.highScoreDisplay.textContent, '250');
+    app.elements.boardSizeSelect.value = '10';
+    app.elements.boardSizeSelect.listeners.change();
+    assert.equal(app.elements.highScoreDisplay.textContent, '—');
+    assert.match(app.elements.leaderboardDifficulty.textContent, /10 × 10.*3/);
+    const second = app.rankings.refresh();
+    await new Promise(setImmediate);
+    app.elements.queueSizeSelect.value = '5';
+    app.elements.queueSizeSelect.listeners.change();
+    const third = app.rankings.refresh();
+    await new Promise(setImmediate);
+    requests[2].resolve(response({entries: [{...entry, boardSize: 10, batchSize: 5, score: 15}]}));
+    await third;
+    requests[1].resolve(response({entries: [{...entry, boardSize: 10, score: 259}]}));
+    await second;
+    assert.equal(app.elements.highScoreDisplay.textContent, '15');
+    const game = app.controller.game;
+    app.elements.languageSelect.value = 'en';
+    app.elements.languageSelect.listeners.change();
+    assert.match(app.elements.leaderboardDifficulty.textContent, /10 × 10 board · 5 beans per turn/);
+    assert.equal(app.controller.game, game);
+});
+
+test('a restored game reads the saved difficulty before downloading its ranking', async () => {
+    const saved = createApp({size: 10, batch: 4});
+    const calls = [];
+    const {service} = serviceFixture({fetch: async (url, init) => {
+        calls.push(JSON.parse(init.body));
+        return response({entries: []});
+    }});
+    const app = rankedApp(service, {storage: saved.storage});
+    await app.rankings.refresh();
+    assert.deepEqual(calls, [{p_board_size: 10, p_batch_size: 4, p_limit: 50}]);
+    assert.equal(service.known, true);
+    assert.equal(app.elements.highScoreDisplay.textContent, '0');
+});
+
+test('offline scores keep their original difficulty while concurrent refreshes share one flush', async () => {
+    const storage = createMemoryStorage();
+    const offline = serviceFixture({storage, fetch: async () => { throw new Error('Offline'); }}).service;
+    await offline.submit(entry);
+    await offline.submit({...entry, id: '00000000-0000-4000-8000-000000000002', boardSize: 10, batchSize: 5});
+    const calls = [];
+    const {service} = serviceFixture({storage, fetch: async (url, init) => {
+        const body = JSON.parse(init.body);
+        calls.push({url, body});
+        return response(url.endsWith('submit_score') ? {rank: body.p_batch_size === 5 ? 2 : 1} : {entries: []});
+    }});
+    service.selectDifficulty(9, 4);
+    const [sent, shared] = await Promise.all([service.flush(), service.flush()]);
+    await service.load();
+    assert.deepEqual(shared, sent);
+    assert.deepEqual(sent.map(item => item.rank), [1, 2]);
+    assert.deepEqual(calls.slice(0, 2).map(call => [call.body.p_board_size, call.body.p_batch_size]), [[8, 3], [10, 5]]);
+    assert.deepEqual(calls[2].body, {p_board_size: 9, p_batch_size: 4, p_limit: 50});
+    assert.equal(service.pending.length, 0);
+    assert.deepEqual(service.entries, []);
 });
 
 test('a stalled response body is bounded by the request timeout', async () => {

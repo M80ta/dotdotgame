@@ -4,7 +4,7 @@ export class LeaderboardUI {
     constructor(document, i18n) {
         Object.assign(this, {document, i18n});
         const ids = ['leaderboardBtn', 'modalLeaderboardBtn', 'leaderboardModal', 'leaderboardClose', 'leaderboardRefresh',
-            'leaderboardRows', 'leaderboardState', 'kingName', 'scoreForm', 'playerName', 'playerComment', 'submitScoreBtn', 'submissionState'];
+            'leaderboardRows', 'leaderboardState', 'leaderboardDifficulty', 'kingName', 'scoreForm', 'playerName', 'playerComment', 'submitScoreBtn', 'submissionState'];
         this.refs = Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));
         this.submission = {code: 'prompt', params: {}};
     }
@@ -58,6 +58,7 @@ export class LeaderboardUI {
     }
     render(service) {
         this.service = service;
+        this.refs.leaderboardDifficulty.textContent = this.i18n.t('ranking.difficulty', {size: service.boardSize, count: service.batchSize});
         this.refs.leaderboardState.textContent = this.i18n.t(`ranking.${service.state}`);
         this.refs.kingName.textContent = service.topName || this.i18n.t(service.known ? 'ranking.noKing' : 'ranking.unknownKing');
         this.refs.leaderboardRows.innerHTML = '';
