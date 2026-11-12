@@ -59,6 +59,8 @@ The top-right **Leaderboard** button opens a floating glass panel listing the to
 
 Rankings are separate for each **board size × beans per turn** combination: 8×8, 9×9, or 10×10 with 3, 4, or 5 beans (nine leaderboards). The panel, reigning king, and submitted rank all use that game's difficulty. Changing either setting starts a fresh game and immediately selects its leaderboard; the panel displays the selected difficulty. Restored games select their saved difficulty. Each difficulty keeps its own offline snapshot, and delayed responses cannot replace another difficulty's rankings. Offline results retain their original settings when retried. The old mixed leaderboard cache is ignored.
 
+Tests cover all nine difficulty combinations, separate offline snapshots, restored settings, and delayed responses during rapid changes. The hosted backend also passed anonymous submission and tied-rank checks across both difficulty dimensions in a rolled-back transaction, preserving all existing scores.
+
 The **Reigning King** comes from the highest published shared score and that player's name. Local points do not replace the published king until submitted. Before any shared snapshot has been downloaded, the score is unknown; offline snapshots are identified as cached. Device-local legacy high scores are not automatically published.
 
 Offline submissions wait in a bounded outbox and reuse the same UUID on retry. Reconnection, returning to the page, opening/refreshing rankings, and a visible-page retry timer attempt delivery. A successful retry updates that game's rank. Storage failure is not presented as a safely retained result.

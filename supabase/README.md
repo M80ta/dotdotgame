@@ -26,6 +26,8 @@ The migration was executed in the Supabase SQL editor. [`tests/leaderboard.sql`]
 
 After the difficulty migration, use [`tests/difficulty-rankings.sql`](./tests/difficulty-rankings.sql). It checks both difficulty dimensions, per-difficulty tied ranks, idempotent retries, and table access as the anonymous role. All test scores are rolled back; existing scores are untouched. The older bootstrap script targets the original unscoped API and is retained only as historical setup evidence.
 
+The hosted backend passed the difficulty checks on 2026-11-12. All nine difficulty queries were checked through the public REST API, and the eight existing score records were compared before and after the migration; only their calculated ranks changed. The verification transaction left zero temporary scores and confirmed anonymous table access remains denied.
+
 ## API and access
 
 - `POST /rest/v1/rpc/get_leaderboard` accepts `{ "p_board_size": 10, "p_batch_size": 3, "p_limit": 50 }` and returns `{ "entries": [...] }`. Both difficulty settings are required. Filtering happens before ranking and the top-50 limit. The old unscoped signature is removed.
